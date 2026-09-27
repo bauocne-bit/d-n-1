@@ -1,0 +1,835 @@
+-- Statically deobfuscated from the supplied AuraHub loader.
+-- Network actions were not executed; review endpoints and key/HWID handling.
+
+-- String constants were statically decoded from the embedded XOR table.
+local SCRIPT_NAME = "lennonhubv3"
+local PRIMARY_SERVER_URL = "https://auradt.site"
+local BACKUP_SERVER_URL = ""
+local BASE_GET_KEY_URL = "https://link4sub.com/zvbEPicCpT"
+local LOAD_URL = "https://auradt.site/api/autokey/load?script=lennonhubv3"
+local VERIFY_URL = "https://auradt.site/api/autokey/verify?script=lennonhubv3"
+local CREATE_LINK_URL = "https://auradt.site/api/autokey/create-link?script=lennonhubv3"
+local SAVE_FILE_NAME = "AURAHUB.TXT"
+local LEGACY_SAVE_FILE = "AuraHubKey_lennonhubv3.txt"
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+	pcall(function()
+		LocalPlayer = Players.PlayerAdded:Wait()
+	end)
+	if not LocalPlayer then
+		LocalPlayer = Players.LocalPlayer
+	end
+end
+local function GetDeviceHWID()
+	local hwid = ""
+	pcall(function()
+		if gethwid then
+			hwid = tostring(gethwid())
+		elseif identifyexecutor and getgenv and getgenv().gethwid then
+			hwid = tostring(getgenv().gethwid())
+		elseif
+			game:GetService("RbxAnalyticsService")
+			and pcall(function()
+				return game:GetService("RbxAnalyticsService"):GetClientId()
+			end)
+		then
+			hwid = tostring(game:GetService("RbxAnalyticsService"):GetClientId())
+		elseif LocalPlayer and LocalPlayer.UserId then
+			hwid = tostring(LocalPlayer.UserId)
+		end
+	end)
+	if not hwid or hwid == "" or hwid == "nil" then
+		pcall(function()
+			hwid = tostring((LocalPlayer and LocalPlayer.UserId) or "UNKNOWN_DEVICE")
+		end)
+	end
+	return hwid or "UNKNOWN_DEVICE"
+end
+local function RawHttpRequest(url)
+	local reqFn = (syn and syn.request) or (http and http.request) or http_request or request
+	if reqFn then
+		local success, res = pcall(function()
+			return reqFn({
+				Url = url,
+				url = url,
+				Method = "GET",
+				method = "GET",
+				Headers = { ["User-Agent"] = "AuraHub-RobloxClient/2.0" },
+			})
+		end)
+		if success and res then
+			local body = res.Body or res.body
+			local statusCode = res.StatusCode or res.status_code or 200
+			if body and body ~= "" then
+				return true, body, statusCode
+			end
+		end
+	end
+	local success, body = pcall(function()
+		return game:HttpGet(url)
+	end)
+	return success, body, (success and 200 or 0)
+end
+local function SafeHttpRequest(url)
+	local ok, body, code = RawHttpRequest(url)
+	local isCloudflare = false
+	if ok and body then
+		if
+			string.find(body, "challenges.cloudflare.com")
+			or string.find(body, "<title>Just a moment...")
+			or string.find(body, "cf%-mitigated")
+			or (code == 403 and string.find(body, "<html"))
+		then
+			isCloudflare = true
+		end
+	elseif not ok or code == 403 then
+		isCloudflare = true
+	end
+	if
+		isCloudflare
+		and BACKUP_SERVER_URL
+		and BACKUP_SERVER_URL ~= ""
+		and PRIMARY_SERVER_URL
+		and PRIMARY_SERVER_URL ~= ""
+	then
+		local backupUrl = string.gsub(url, PRIMARY_SERVER_URL, BACKUP_SERVER_URL)
+		if backupUrl ~= url then
+			local bOk, bBody, bCode = RawHttpRequest(backupUrl)
+			if bOk and bBody and not string.find(bBody, "<title>Just a moment...") then
+				return bOk, bBody, bCode
+			end
+		end
+	end
+	return ok, body, code
+end
+local function CopyToClipboard(text)
+	if setclipboard then
+		setclipboard(text)
+		return true
+	elseif toclipboard then
+		toclipboard(text)
+		return true
+	elseif Clipboard and Clipboard.set then
+		Clipboard.set(text)
+		return true
+	end
+	return false
+end
+local function ParseSavedKeyForScript(fileContent, targetScript)
+	if not fileContent or fileContent == "" then
+		return nil
+	end
+	local target = string.lower(string.gsub(targetScript or "", "^%s*(.-)%s*$", "%1"))
+	local singleKeyFallback = nil
+	for line in string.gmatch(fileContent, "[^\r\n]+") do
+		local trimmed = string.gsub(line, "^%s*(.-)%s*$", "%1")
+		if
+			trimmed ~= ""
+			and string.sub(trimmed, 1, 2) ~= "--"
+			and string.sub(trimmed, 1, 1) ~= "#"
+		then
+			local cleanLine = string.gsub(trimmed, "[:=]", " ")
+			local parts = {}
+			for token in string.gmatch(cleanLine, "%S+") do
+				table.insert(parts, token)
+			end
+			if #parts >= 2 then
+				if string.lower(parts[2]) == target then
+					return parts[1]
+				elseif string.lower(parts[1]) == target then
+					return parts[2]
+				end
+			elseif #parts == 1 then
+				if not singleKeyFallback then
+					singleKeyFallback = parts[1]
+				end
+			end
+		end
+	end
+	return singleKeyFallback
+end
+local function SaveKeyToDevice(keyStr, targetScript)
+	if not writefile then
+		return false
+	end
+	local cleanKey = string.gsub(keyStr or "", "^%s*(.-)%s*$", "%1")
+	if cleanKey == "" then
+		return false
+	end
+	local target = string.lower(string.gsub(targetScript or "", "^%s*(.-)%s*$", "%1"))
+	local newEntry = cleanKey .. " " .. target
+	local lines = {}
+	local replaced = false
+	if readfile and isfile and isfile(SAVE_FILE_NAME) then
+		local readOk, oldContent = pcall(function()
+			return readfile(SAVE_FILE_NAME)
+		end)
+		if readOk and oldContent and oldContent ~= "" then
+			for line in string.gmatch(oldContent, "[^\r\n]+") do
+				local trimmed = string.gsub(line, "^%s*(.-)%s*$", "%1")
+				if
+					trimmed ~= ""
+					and string.sub(trimmed, 1, 2) ~= "--"
+					and string.sub(trimmed, 1, 1) ~= "#"
+				then
+					local cleanLine = string.gsub(trimmed, "[:=]", " ")
+					local parts = {}
+					for token in string.gmatch(cleanLine, "%S+") do
+						table.insert(parts, token)
+					end
+					if
+						#parts >= 2
+						and (string.lower(parts[1]) == target or string.lower(parts[2]) == target)
+					then
+						table.insert(lines, newEntry)
+						replaced = true
+					elseif #parts == 1 and string.lower(parts[1]) == string.lower(cleanKey) then
+						table.insert(lines, newEntry)
+						replaced = true
+					else
+						table.insert(lines, trimmed)
+					end
+				end
+			end
+		end
+	end
+	if not replaced then
+		table.insert(lines, newEntry)
+	end
+	local finalContent = table.concat(lines, "\n") .. "\n"
+	pcall(function()
+		writefile(SAVE_FILE_NAME, finalContent)
+	end)
+	pcall(function()
+		if writefile and LEGACY_SAVE_FILE then
+			writefile(LEGACY_SAVE_FILE, cleanKey)
+		end
+	end)
+	return true
+end
+local function DecryptSessionPayload(hexStr, keyStr)
+	local keyBytes = {}
+	for i = 1, #keyStr do
+		table.insert(keyBytes, string.byte(keyStr, i))
+	end
+	if #keyBytes == 0 then
+		return hexStr
+	end
+	local S = {}
+	for i = 0, 255 do
+		S[i] = i
+	end
+	local j = 0
+	local kLen = #keyBytes
+	for i = 0, 255 do
+		j = (j + S[i] + keyBytes[(i % kLen) + 1]) % 256
+		local temp = S[i]
+		S[i] = S[j]
+		S[j] = temp
+	end
+	local si, sj = 0, 0
+	local chunks = {}
+	local buf = {}
+	local bufLen = 0
+	local hexLen = #hexStr
+	for i = 1, hexLen, 2 do
+		local hexPair = string.sub(hexStr, i, i + 1)
+		local encByte = tonumber(hexPair, 16) or 0
+		si = (si + 1) % 256
+		sj = (sj + S[si]) % 256
+		local temp = S[si]
+		S[si] = S[sj]
+		S[sj] = temp
+		local kByte = S[(S[si] + S[sj]) % 256]
+		local decByte = (encByte - kByte) % 256
+		bufLen = bufLen + 1
+		buf[bufLen] = string.char(decByte)
+		if bufLen >= 2048 then
+			table.insert(chunks, table.concat(buf))
+			buf = {}
+			bufLen = 0
+		end
+	end
+	if bufLen > 0 then
+		table.insert(chunks, table.concat(buf))
+	end
+	return table.concat(chunks)
+end
+local function LaunchProtectedScript(keyStr, sessionToken, sessionKey, onStatusChange)
+	if type(sessionToken) == "function" and not onStatusChange then
+		onStatusChange = sessionToken
+		sessionToken = nil
+		sessionKey = nil
+	end
+	task.spawn(function()
+		local cleanKey = string.gsub(keyStr or "", "^%s*(.-)%s*$", "%1")
+		local hwid = GetDeviceHWID()
+		local requestUrl = LOAD_URL
+			.. "&key="
+			.. HttpService:UrlEncode(cleanKey)
+			.. "&hwid="
+			.. HttpService:UrlEncode(hwid)
+		if sessionToken and sessionToken ~= "" then
+			requestUrl = LOAD_URL
+				.. "&session="
+				.. HttpService:UrlEncode(sessionToken)
+				.. "&hwid="
+				.. HttpService:UrlEncode(hwid)
+		end
+		if onStatusChange then
+			onStatusChange("loading", "Đang load script vui lòng chờ | pls wait")
+		end
+		local ok, payload, code = SafeHttpRequest(requestUrl)
+		if not ok or not payload or string.len(payload) == 0 then
+			local errMsg = "Không thể kết nối đến máy chủ!"
+			warn("[AuraHub Error]: " .. errMsg)
+			pcall(function()
+				game:GetService("StarterGui"):SetCore("SendNotification", {
+					Title = "❌ AuraHub Lỗi",
+					Text = errMsg,
+					Duration = 6,
+				})
+			end)
+			if onStatusChange then
+				onStatusChange("error", errMsg)
+			end
+			return false
+		end
+		local isJson, res = pcall(function()
+			return HttpService:JSONDecode(payload)
+		end)
+		if isJson and res and res.valid == false then
+			local errMsg = tostring(res.message or "Key không hợp lệ hoặc đã hết hạn!")
+			warn("[AuraHub Error]: " .. errMsg)
+			pcall(function()
+				game:GetService("StarterGui"):SetCore("SendNotification", {
+					Title = "❌ AuraHub Lỗi",
+					Text = errMsg,
+					Duration = 6,
+				})
+			end)
+			if onStatusChange then
+				onStatusChange("error", errMsg)
+			end
+			return false
+		end
+		if code and code ~= 200 and (code < 200 or code >= 300) then
+			local errMsg = "Máy chủ trả về mã lỗi HTTP " .. tostring(code)
+			warn("[AuraHub Error]: " .. errMsg)
+			if onStatusChange then
+				onStatusChange("error", errMsg)
+			end
+			return false
+		end
+		if string.sub(payload, 1, 6) == "AHENC:" and sessionKey and sessionKey ~= "" then
+			local hexCipher = string.sub(payload, 7)
+			local decOk, decCode = pcall(function()
+				return DecryptSessionPayload(hexCipher, sessionKey)
+			end)
+			if decOk and decCode and string.len(decCode) > 0 then
+				payload = decCode
+			else
+				local errMsg = "Lỗi giải mã session payload!"
+				warn("[AuraHub Error]: " .. errMsg)
+				if onStatusChange then
+					onStatusChange("error", errMsg)
+				end
+				return false
+			end
+		end
+		local loadOk, fnOrErr = pcall(function()
+			return loadstring(payload)
+		end)
+		if not loadOk or not fnOrErr or type(fnOrErr) ~= "function" then
+			local errMsg = "Lỗi khởi chạy: " .. tostring(fnOrErr or "loadstring thất bại")
+			warn("[AuraHub Error]: " .. errMsg)
+			pcall(function()
+				game:GetService("StarterGui"):SetCore("SendNotification", {
+					Title = "❌ AuraHub Lỗi",
+					Text = "Lỗi khởi chạy script!",
+					Duration = 6,
+				})
+			end)
+			if onStatusChange then
+				onStatusChange("error", errMsg)
+			end
+			return false
+		end
+		if onStatusChange then
+			onStatusChange("success", "Đang khởi chạy...")
+		end
+		pcall(function()
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "⚡ AuraHub",
+				Text = "Khởi chạy script " .. SCRIPT_NAME .. " thành công!",
+				Duration = 4,
+			})
+		end)
+		local runOk, runErr = pcall(fnOrErr)
+		if not runOk then
+			warn("[AuraHub Error]: Lỗi khi chạy script: " .. tostring(runErr))
+		end
+		return runOk
+	end)
+end
+local function VerifyKeyWithServer(keyStr)
+	if not keyStr or keyStr == "" then
+		return false, { message = "Vui long nhap ma Key!" }
+	end
+	local cleanKey = string.gsub(keyStr, "^%s*(.-)%s*$", "%1")
+	local hwid = GetDeviceHWID()
+	local requestUrl = VERIFY_URL
+		.. "&key="
+		.. HttpService:UrlEncode(cleanKey)
+		.. "&hwid="
+		.. HttpService:UrlEncode(hwid)
+	local ok, response, code = SafeHttpRequest(requestUrl)
+	if ok and response and response ~= "" then
+		local jsonOk, data = pcall(function()
+			return HttpService:JSONDecode(response)
+		end)
+		if jsonOk and data then
+			if data.valid then
+				return true, data
+			else
+				return false, data
+			end
+		end
+	end
+	if code == 403 or (response and string.find(string.lower(tostring(response)), "403")) then
+		return false, { message = "Key da duoc khoa cho thiet bi khac hoac script khac!" }
+	elseif code == 400 or (response and string.find(string.lower(tostring(response)), "400")) then
+		return false, { message = "Key da het han 12 gio hoac khong ton tai!" }
+	end
+	return false, { message = "Khong the ket noi den server AuraHub!" }
+end
+local savedKey = nil
+if readfile and isfile then
+	if isfile(SAVE_FILE_NAME) then
+		pcall(function()
+			local content = readfile(SAVE_FILE_NAME)
+			savedKey = ParseSavedKeyForScript(content, SCRIPT_NAME)
+		end)
+	end
+	if (not savedKey or savedKey == "") and isfile(LEGACY_SAVE_FILE) then
+		pcall(function()
+			local content = readfile(LEGACY_SAVE_FILE)
+			if content and content ~= "" then
+				savedKey = string.gsub(content, "^%s*(.-)%s*$", "%1")
+			end
+		end)
+	end
+end
+if savedKey and savedKey ~= "" then
+	local valid, resData = VerifyKeyWithServer(savedKey)
+	if valid then
+		pcall(function()
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "⚡ AuraHub",
+				Text = "Đang load script vui lòng chờ | pls wait",
+				Duration = 4,
+			})
+		end)
+		LaunchProtectedScript(
+			savedKey,
+			resData and resData.session_token,
+			resData and resData.session_key,
+			function(state, msg)
+				if state == "error" then
+					warn("[AuraHub Error]: " .. tostring(msg))
+				elseif state == "success" then
+					pcall(function()
+						game:GetService("StarterGui"):SetCore("SendNotification", {
+							Title = "⚡ AuraHub",
+							Text = "Khởi chạy script " .. SCRIPT_NAME .. " thành công!",
+							Duration = 4,
+						})
+					end)
+				end
+			end
+		)
+		return
+	end
+end
+local GUI_NAME = "AuraHub_KeyPrompt_" .. SCRIPT_NAME
+local parentGui = nil
+pcall(function()
+	if gethui then
+		parentGui = gethui()
+	end
+end)
+if not parentGui then
+	pcall(function()
+		local test = Instance.new("Folder")
+		test.Parent = CoreGui
+		test:Destroy()
+		parentGui = CoreGui
+	end)
+end
+if not parentGui then
+	pcall(function()
+		if LocalPlayer then
+			parentGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+				or LocalPlayer:WaitForChild("PlayerGui", 5)
+		end
+	end)
+end
+if not parentGui then
+	parentGui = CoreGui
+end
+if parentGui and parentGui:FindFirstChild(GUI_NAME) then
+	pcall(function()
+		parentGui[GUI_NAME]:Destroy()
+	end)
+end
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = GUI_NAME
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.Size = UDim2.new(0, 360, 0, 310)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 17, 26)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(124, 92, 255)
+UIStroke.Thickness = 1.5
+UIStroke.Parent = MainFrame
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 42)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 25, 38)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 12)
+TopCorner.Parent = TopBar
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -50, 1, 0)
+Title.Position = UDim2.new(0, 14, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.Text = "⚡ AURA HUB - " .. SCRIPT_NAME:upper()
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 32, 0, 32)
+CloseBtn.Position = UDim2.new(1, -38, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 13
+CloseBtn.Parent = TopBar
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = CloseBtn
+CloseBtn.MouseButton1Click:Connect(function()
+	pcall(function()
+		ScreenGui:Destroy()
+	end)
+end)
+local LangBtn = Instance.new("TextButton")
+LangBtn.Size = UDim2.new(0, 52, 0, 26)
+LangBtn.Position = UDim2.new(1, -92, 0, 8)
+LangBtn.BackgroundColor3 = Color3.fromRGB(45, 50, 75)
+LangBtn.Font = Enum.Font.GothamBold
+LangBtn.Text = "🇻🇳 VN"
+LangBtn.TextColor3 = Color3.fromRGB(220, 220, 240)
+LangBtn.TextSize = 11
+LangBtn.Parent = TopBar
+local LangCorner = Instance.new("UICorner")
+LangCorner.CornerRadius = UDim.new(0, 6)
+LangCorner.Parent = LangBtn
+local LangStroke = Instance.new("UIStroke")
+LangStroke.Color = Color3.fromRGB(80, 90, 130)
+LangStroke.Thickness = 1
+LangStroke.Parent = LangBtn
+local isVietnamese = false
+pcall(function()
+	local geoOk, geoBody = pcall(function()
+		return game:HttpGet("http://ip-api.com/json/?fields=countryCode")
+	end)
+	if geoOk and geoBody then
+		local cc = string.match(geoBody, '"countryCode"%s*:%s*"(%a+)"')
+		if cc and string.upper(cc) == "VN" then
+			isVietnamese = true
+		end
+	end
+end)
+LangBtn.Text = isVietnamese and "🇬🇧 EN" or "🇻🇳 VN"
+local LANG = {
+	vi = {
+		placeholder = "Dán mã Key vào đây...",
+		get_key = "🔗 GET KEY",
+		check_key = "✔ KIỂM TRA KEY",
+		discord = "💬 VÀO DISCORD HƯỚNG DẪN LẤY KEY",
+		note = "• Lưu file AURAHUB.TXT ("
+			.. SCRIPT_NAME
+			.. "). Mỗi key 1 lượt dùng (1 thiết bị) · 12H cho game này.",
+		copied = "✔ Đã copy link Get Key! Mở trình duyệt và bấm nút GET KEY.",
+		copy_notif_title = "🔗 AuraHub Get Key",
+		copy_notif_text = "Đã sao chép link Get Key! Mở trình duyệt để nhận Key 12h.",
+		fallback = "Hãy mở trình duyệt và truy cập: ",
+		discord_copied = "✔ Đã copy link Discord! Mở trình duyệt để vào hướng dẫn.",
+		empty_key = "✖ Vui lòng dán Key vào ô trước khi bấm kiểm tra!",
+		loading = "⏳ Đang load script vui lòng chờ | pls wait",
+		loading_btn = "⏳ ĐANG LOAD SCRIPT...",
+		expired = "Key đã hết hạn 12 giờ!",
+		invalid = "Key không hợp lệ hoặc đã hết hạn!",
+	},
+	en = {
+		placeholder = "Paste your Key here...",
+		get_key = "🔗 GET KEY",
+		check_key = "✔ CHECK KEY",
+		discord = "💬 JOIN DISCORD FOR KEY GUIDE",
+		note = "• Saves to AURAHUB.TXT ("
+			.. SCRIPT_NAME
+			.. "). Each key 1 use (1 device) · 12H for this game.",
+		copied = "✔ Get Key link copied! Open browser and press GET KEY.",
+		copy_notif_title = "🔗 AuraHub Get Key",
+		copy_notif_text = "Get Key link copied! Open browser to get your 12h Key.",
+		fallback = "Open browser and visit: ",
+		discord_copied = "✔ Discord link copied! Open browser to join.",
+		empty_key = "✖ Please paste your Key before checking!",
+		loading = "⏳ Loading script please wait...",
+		loading_btn = "⏳ LOADING SCRIPT...",
+		expired = "Key expired (12h limit)!",
+		invalid = "Invalid or expired Key!",
+	},
+}
+local function GetLang()
+	return isVietnamese and LANG.vi or LANG.en
+end
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -28, 0, 32)
+StatusLabel.Position = UDim2.new(0, 14, 0, 50)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = ""
+StatusLabel.TextColor3 = Color3.fromRGB(156, 163, 175)
+StatusLabel.TextSize = 11
+StatusLabel.TextWrapped = true
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = MainFrame
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(1, -28, 0, 38)
+KeyInput.Position = UDim2.new(0, 14, 0, 88)
+KeyInput.BackgroundColor3 = Color3.fromRGB(26, 30, 46)
+KeyInput.Font = Enum.Font.GothamMedium
+KeyInput.PlaceholderText = GetLang().placeholder
+KeyInput.PlaceholderColor3 = Color3.fromRGB(100, 116, 139)
+KeyInput.Text = savedKey or ""
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.TextSize = 13
+KeyInput.ClearTextOnFocus = false
+KeyInput.Parent = MainFrame
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 8)
+InputCorner.Parent = KeyInput
+local InputStroke = Instance.new("UIStroke")
+InputStroke.Color = Color3.fromRGB(51, 65, 85)
+InputStroke.Thickness = 1
+InputStroke.Parent = KeyInput
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Size = UDim2.new(0.48, -7, 0, 38)
+GetKeyBtn.Position = UDim2.new(0, 14, 0, 138)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(245, 158, 11)
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.Text = GetLang().get_key
+GetKeyBtn.TextColor3 = Color3.fromRGB(15, 23, 42)
+GetKeyBtn.TextSize = 12
+GetKeyBtn.Parent = MainFrame
+local GetKeyCorner = Instance.new("UICorner")
+GetKeyCorner.CornerRadius = UDim.new(0, 8)
+GetKeyCorner.Parent = GetKeyBtn
+local CheckKeyBtn = Instance.new("TextButton")
+CheckKeyBtn.Size = UDim2.new(0.48, -7, 0, 38)
+CheckKeyBtn.Position = UDim2.new(0.52, 0, 0, 138)
+CheckKeyBtn.BackgroundColor3 = Color3.fromRGB(124, 92, 255)
+CheckKeyBtn.Font = Enum.Font.GothamBold
+CheckKeyBtn.Text = GetLang().check_key
+CheckKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CheckKeyBtn.TextSize = 12
+CheckKeyBtn.Parent = MainFrame
+local CheckKeyCorner = Instance.new("UICorner")
+CheckKeyCorner.CornerRadius = UDim.new(0, 8)
+CheckKeyCorner.Parent = CheckKeyBtn
+local DISCORD_URL = "https://discord.gg/ecBKSKtA6S"
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(1, -28, 0, 34)
+DiscordBtn.Position = UDim2.new(0, 14, 0, 184)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.Text = GetLang().discord
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.TextSize = 12
+DiscordBtn.Parent = MainFrame
+local DiscordCorner = Instance.new("UICorner")
+DiscordCorner.CornerRadius = UDim.new(0, 8)
+DiscordCorner.Parent = DiscordBtn
+local NoteLabel = Instance.new("TextLabel")
+NoteLabel.Size = UDim2.new(1, -28, 0, 42)
+NoteLabel.Position = UDim2.new(0, 14, 0, 225)
+NoteLabel.BackgroundTransparency = 1
+NoteLabel.Font = Enum.Font.Gotham
+NoteLabel.Text = GetLang().note
+NoteLabel.TextColor3 = Color3.fromRGB(100, 116, 139)
+NoteLabel.TextSize = 10
+NoteLabel.TextWrapped = true
+NoteLabel.TextXAlignment = Enum.TextXAlignment.Left
+NoteLabel.Parent = MainFrame
+local function UpdateLanguageUI()
+	local L = GetLang()
+	LangBtn.Text = isVietnamese and "🇬🇧 EN" or "🇻🇳 VN"
+	KeyInput.PlaceholderText = L.placeholder
+	GetKeyBtn.Text = L.get_key
+	if CheckKeyBtn.Active then
+		CheckKeyBtn.Text = L.check_key
+	end
+	DiscordBtn.Text = L.discord
+	NoteLabel.Text = L.note
+end
+LangBtn.MouseButton1Click:Connect(function()
+	isVietnamese = not isVietnamese
+	UpdateLanguageUI()
+end)
+pcall(function()
+	ScreenGui.Parent = parentGui
+end)
+GetKeyBtn.MouseButton1Click:Connect(function()
+	local hwidVal = GetDeviceHWID()
+	local fullGetUrl = BASE_GET_KEY_URL
+	if not string.find(fullGetUrl, "link4sub.com") then
+		if hwidVal and hwidVal ~= "" and hwidVal ~= "UNKNOWN_DEVICE" then
+			fullGetUrl = fullGetUrl .. "&hwid=" .. HttpService:UrlEncode(hwidVal)
+		end
+	end
+	local ok = CopyToClipboard(fullGetUrl)
+	if ok then
+		StatusLabel.Text = GetLang().copied
+		StatusLabel.TextColor3 = Color3.fromRGB(34, 197, 94)
+		pcall(function()
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = GetLang().copy_notif_title,
+				Text = GetLang().copy_notif_text,
+				Duration = 4,
+			})
+		end)
+	else
+		StatusLabel.Text = GetLang().fallback .. fullGetUrl
+		StatusLabel.TextColor3 = Color3.fromRGB(245, 158, 11)
+	end
+end)
+DiscordBtn.MouseButton1Click:Connect(function()
+	local ok = CopyToClipboard(DISCORD_URL)
+	if ok then
+		StatusLabel.Text = GetLang().discord_copied
+		StatusLabel.TextColor3 = Color3.fromRGB(88, 101, 242)
+		pcall(function()
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "💬 Discord AuraHub",
+				Text = GetLang().discord_copied,
+				Duration = 4,
+			})
+		end)
+	else
+		StatusLabel.Text = GetLang().fallback .. DISCORD_URL
+		StatusLabel.TextColor3 = Color3.fromRGB(245, 158, 11)
+	end
+end)
+local isChecking = false
+local function SetCheckButtonState(enabled, text)
+	CheckKeyBtn.Active = enabled
+	CheckKeyBtn.AutoButtonColor = enabled
+	if not enabled then
+		CheckKeyBtn.BackgroundColor3 = Color3.fromRGB(75, 60, 110)
+		CheckKeyBtn.TextColor3 = Color3.fromRGB(180, 180, 200)
+		CheckKeyBtn.Text = text or GetLang().loading_btn
+	else
+		CheckKeyBtn.BackgroundColor3 = Color3.fromRGB(124, 92, 255)
+		CheckKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		CheckKeyBtn.Text = text or GetLang().check_key
+	end
+end
+local function ProcessKeyVerification(keyToVerify, isAutoLogin)
+	if isChecking then
+		return
+	end
+	local cleanKey = string.gsub(keyToVerify or "", "^%s*(.-)%s*$", "%1")
+	if not cleanKey or cleanKey == "" then
+		StatusLabel.Text = GetLang().empty_key
+		StatusLabel.TextColor3 = Color3.fromRGB(239, 68, 68)
+		return
+	end
+	isChecking = true
+	SetCheckButtonState(false, GetLang().loading_btn)
+	StatusLabel.Text = GetLang().loading
+	StatusLabel.TextColor3 = Color3.fromRGB(60, 224, 255)
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "⚡ AuraHub",
+			Text = GetLang().loading,
+			Duration = 4,
+		})
+	end)
+	task.spawn(function()
+		local valid, resData = VerifyKeyWithServer(cleanKey)
+		if valid then
+			local rem = (resData and (resData.time_remaining_human or "12h")) or "12h"
+			SetCheckButtonState(false, GetLang().loading_btn)
+			StatusLabel.Text = GetLang().loading
+			StatusLabel.TextColor3 = Color3.fromRGB(60, 224, 255)
+			SaveKeyToDevice(cleanKey, SCRIPT_NAME)
+			LaunchProtectedScript(
+				cleanKey,
+				resData and resData.session_token,
+				resData and resData.session_key,
+				function(state, msg)
+					if state == "loading" then
+						StatusLabel.Text = GetLang().loading
+						StatusLabel.TextColor3 = Color3.fromRGB(60, 224, 255)
+						SetCheckButtonState(false, GetLang().loading_btn)
+					elseif state == "error" then
+						StatusLabel.Text = "✖ " .. tostring(msg)
+						StatusLabel.TextColor3 = Color3.fromRGB(239, 68, 68)
+						isChecking = false
+						SetCheckButtonState(true, GetLang().check_key)
+					elseif state == "success" then
+						StatusLabel.Text = "✔ "
+							.. (
+								isVietnamese and "Khởi chạy script thành công!"
+								or "Script launched successfully!"
+							)
+						StatusLabel.TextColor3 = Color3.fromRGB(34, 197, 94)
+						task.wait(0.5)
+						pcall(function()
+							ScreenGui:Destroy()
+						end)
+					end
+				end
+			)
+		else
+			local errMsg = (resData and resData.message)
+				or (isAutoLogin and GetLang().expired or GetLang().invalid)
+			StatusLabel.Text = "✖ " .. tostring(errMsg)
+			StatusLabel.TextColor3 = Color3.fromRGB(239, 68, 68)
+			isChecking = false
+			SetCheckButtonState(true, GetLang().check_key)
+		end
+	end)
+end
+CheckKeyBtn.MouseButton1Click:Connect(function()
+	ProcessKeyVerification(KeyInput.Text, false)
+end)
