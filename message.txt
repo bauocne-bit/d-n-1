@@ -1,0 +1,4237 @@
+-- Deobfuscated by ccjvwsod on Discord
+-- Detected obfuscation: Luraph v15
+-- Local names are inferred from use (the original names are not in the bytecode)
+
+if not game then
+	error("Run in executor.")
+end
+
+local lhhInst = _G.__LHH_INST
+
+if lhhInst and not lhhInst.dead then
+	lhhInst.dead = true
+	local v = ipairs
+	local conns = lhhInst.conns or {}
+
+	for _, conn in v(conns) do
+		pcall(function()
+			conn:Disconnect()
+		end)
+	end
+
+	local v2 = ipairs
+	local guis = lhhInst.guis or {}
+
+	for _, gui in v2(guis) do
+		pcall(function()
+			gui:Destroy()
+		end)
+	end
+
+	if lhhInst.antiDropConn then
+		pcall(function()
+			lhhInst.antiDropConn:Disconnect()
+		end)
+	end
+
+	if lhhInst.refreshLoopTask then
+		pcall(task.cancel, lhhInst.refreshLoopTask)
+	end
+
+	if lhhInst.treadmillLoopTask then
+		pcall(task.cancel, lhhInst.treadmillLoopTask)
+	end
+end
+
+local lhhInst2
+
+lhhInst2 = {
+	dead = false,
+	conns = {},
+	guis = {},
+	antiDropConn = nil,
+	refreshLoopTask = nil,
+	treadmillLoopTask = nil,
+}
+
+_G.__LHH_INST = lhhInst2
+local fn
+
+fn = function(arg)
+	if arg then
+		table.insert(lhhInst2.conns, arg)
+	end
+
+	return arg
+end
+
+if not _G.__LHH_SRC then
+	pcall(function()
+		local getinfo = debug and debug.getinfo and debug.getinfo(1, "S")
+
+		if getinfo and getinfo.source and getinfo.source:sub(1, 1) == "@" then
+			local str = getinfo.source:sub(2)
+
+			if type(readfile) == "function" then
+				local ok, lhhSrc = pcall(readfile, str)
+
+				if ok and type(lhhSrc) == "string" and #lhhSrc > 5 then
+					_G.__LHH_SRC = lhhSrc
+				end
+			end
+		end
+	end)
+end
+
+local ReplicatedStorage, RunService, Workspace, localPlayer, tbl, tbl2, fn2, fn3, tbl3, tbl4
+local n, fn4, fn5, fn6, fn7, fn8, flag, fn9, fn10, fn11
+local tbl5, tbl6, uid, fn12
+
+do
+	local Players = game:GetService("Players")
+	ReplicatedStorage = game:GetService("ReplicatedStorage")
+	RunService = game:GetService("RunService")
+	Workspace = game:GetService("Workspace")
+	local StarterGui = game:GetService("StarterGui")
+	local UserInputService = game:GetService("UserInputService")
+	localPlayer = Players.LocalPlayer
+	tbl = { active = false }
+
+	_G.__LHH_DOCTOR = {
+		jitter = 0,
+		stall = 0,
+		drop = 0,
+		kick = 0,
+		retry = 0,
+		lastPos = nil,
+		lastVel = nil,
+		lastMove = os.clock(),
+		lastEgg = nil,
+		lastUidTry = nil,
+		uidRetry = {},
+		autoStopAt = 0,
+		fixCount = 0,
+	}
+
+	local lhhDoctor = _G.__LHH_DOCTOR
+
+	local function log(arg, arg2, ...)
+		local v = table.pack(...)
+		local str = select("#", ...) > 0 and string.format(arg2, table.unpack(v, 1, v.n)) or arg2
+		local lastLog = string.format("[%s][%6.2f] %s", arg, os.clock() - (lhhDoctor.t0 or os.clock()), tostring(str))
+		lhhDoctor.lastLog = lastLog
+
+		if warn then
+			pcall(warn, "[LHH]", lastLog)
+		else
+			print("[LHH]", lastLog)
+		end
+	end
+
+	lhhDoctor.t0 = os.clock()
+	lhhDoctor.log = log
+
+	pcall(function()
+		if _G.__LHH_PROT then
+			return
+		end
+		_G.__LHH_PROT = true
+		local v = getrawmetatable and getrawmetatable(game)
+
+		if v and setreadonly then
+			pcall(setreadonly, v, false)
+			local namecall = v.__namecall
+
+			local fn13 = typeof(checkcaller) == "function" and checkcaller or function()
+				return false
+			end
+
+			local fn14 = typeof(newcclosure) == "function" and newcclosure or function(arg)
+				return arg
+			end
+
+			if namecall and typeof(getnamecallmethod) == "function" then
+				v.__namecall = fn14(function(arg, ...)
+					if not fn13() then
+						if tostring(getnamecallmethod() or ""):lower() == "kick" and tbl.active then
+							return
+						end
+					end
+
+					return namecall(arg, ...)
+				end)
+			end
+
+			pcall(setreadonly, v, true)
+		end
+
+		pcall(function()
+			if typeof(hookfunction) == "function" and localPlayer.Kick and not _G.__LHH_KICK_HOOKED then
+				_G.__LHH_KICK_HOOKED = true
+				local kick = localPlayer.Kick
+
+				hookfunction(localPlayer.Kick, function(arg, ...)
+					if tbl.active then
+						return
+					end
+					local v2 = table.pack(...)
+					return kick(arg, table.unpack(v2, 1, v2.n))
+				end)
+			end
+		end)
+
+		pcall(function()
+			localPlayer.Idled:Connect(function()
+				pcall(function()
+					local VirtualUser = game:GetService("VirtualUser")
+					VirtualUser:CaptureController()
+					VirtualUser:ClickButton2(Vector2.new())
+				end)
+			end)
+		end)
+	end)
+
+	if UserInputService.TouchEnabled then
+	end
+
+	local tbl7 = {}
+	local cframe = CFrame.new(4747.71, 70.57, -335.25)
+	local cframe2 = CFrame.new(3520.94, 70.73, -343.74)
+	local cframe3 = CFrame.new(2446.02, 70.88, -351.18)
+	local cframe4 = CFrame.new(1352.11, 71.02, -358.75)
+	local cframe5 = CFrame.new
+	tbl7[1] = cframe
+	tbl7[2] = cframe2
+	tbl7[3] = cframe3
+	tbl7[4] = cframe4
+
+	do
+		local values = table.pack(cframe5(544.49, 71.13, -364.34))
+		table.move(values, 1, values.n, 5, tbl7)
+	end
+
+	tbl2 = { running = false, uid = nil, startedAt = 0 }
+	local EggState = nil
+	local Assets = nil
+
+	local function fn13()
+		if not EggState then
+			pcall(function()
+				EggState = require(ReplicatedStorage.Client.EggState)
+			end)
+		end
+
+		if not Assets then
+			pcall(function()
+				Assets = require(ReplicatedStorage.Data.Assets)
+			end)
+		end
+	end
+
+	fn13()
+
+	local function fn14(arg, arg2)
+		local networking = ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("Networking")
+		local v = networking and networking:FindFirstChild(arg, true)
+		if v then
+			return v
+		end
+		local v2 = ReplicatedStorage:FindFirstChild(arg, true)
+		if v2 then
+			return v2
+		end
+
+		if arg2 then
+			v2 = networking and networking:FindFirstChild(arg2, true) or ReplicatedStorage:FindFirstChild(arg2, true)
+		end
+
+		return v2
+	end
+
+	local AskFieldEggCarry = fn14("RF/EggWorld/AskFieldEggCarry", "AskFieldEggCarry")
+	fn14("RF/EggWorld/AskFieldEggDrop", "AskFieldEggDrop")
+	fn14("RF/EggWorld/AskLiveSnapshot", "AskLiveSnapshot")
+	local ForestStrike = fn14("RE/GuardPatrol/ForestStrike", "ForestStrike")
+	local SpeedTollOffer = fn14("SpeedTollOffer", "RE/GuardPatrol/SpeedTollOffer")
+
+	fn2 = function()
+		local character = localPlayer.Character
+		return character and character:FindFirstChild("HumanoidRootPart")
+	end
+
+	fn3 = function(arg, arg2)
+		pcall(function()
+			StarterGui:SetCore("SendNotification", { Title = tostring(arg), Text = tostring(arg2), Duration = 3 })
+		end)
+	end
+
+	tbl3 = {
+		pureTweenFarm = false,
+		autoFarmLoop = false,
+		isReturning = false,
+		glidingToTarget = false,
+		teleporting = false,
+		securingEgg = false,
+		godmode = false,
+		swapped = false,
+		alive = true,
+		holdingEggForGuard = false,
+		stealActive = false,
+	}
+
+	tbl4 = { uid = nil, mode = nil, session = 0, lockAt = 0, complete = false }
+	n = 0
+
+	local fn15 = typeof(checkcaller) == "function" and checkcaller or function()
+		return false
+	end
+
+	local fn16 = typeof(newcclosure) == "function" and newcclosure or function(arg)
+		return arg
+	end
+
+	pcall(function()
+		if typeof(hookmetamethod) == "function" and not _G.__LHH_RAG22 then
+			_G.__LHH_RAG22 = true
+			local v = nil
+
+			local function fn17(arg, arg2, arg3, ...)
+				if tbl.active and not fn15() and typeof(arg) == "Instance" then
+					if arg:IsA("Motor6D") and arg2 == "Enabled" and arg3 == false then
+						return nil
+					end
+
+					if arg:IsA("Humanoid") then
+						if arg2 == "PlatformStand" and arg3 == true then
+							return nil
+						end
+
+						if arg2 == "Sit" and arg3 == true then
+							return nil
+						end
+					end
+				end
+
+				return v(arg, arg2, arg3, ...)
+			end
+
+			v = hookmetamethod
+			v = v(game, "__newindex", fn16(fn17))
+		end
+	end)
+
+	local function fn17(arg)
+		local character = arg or localPlayer.Character
+		if not character then
+			return
+		end
+
+		for _, descendant in ipairs(character:GetDescendants()) do
+			if descendant:IsA("BallSocketConstraint") or descendant:IsA("HingeConstraint") or descendant:IsA("NoCollisionConstraint") then
+				pcall(function()
+					descendant:Destroy()
+				end)
+			end
+		end
+
+		for _, descendant in ipairs(character:GetDescendants()) do
+			if descendant:IsA("Motor6D") and descendant.Part0 and descendant.Part1 then
+				descendant.Enabled = true
+				local name = "RigidJointWeld_" .. descendant.Name
+
+				if not descendant.Part1:FindFirstChild(name) then
+					local weldConstraint = Instance.new("WeldConstraint")
+					weldConstraint.Name = name
+					weldConstraint.Part0 = descendant.Part0
+					weldConstraint.Part1 = descendant.Part1
+					weldConstraint.Parent = descendant.Part1
+				end
+			end
+		end
+	end
+
+	local function fn18(arg)
+		local character = arg or localPlayer.Character
+		if not character then
+			return
+		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+		if humanoid then
+			humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+			humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+			humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+			humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+			humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+			if humanoid.PlatformStand then
+				humanoid.PlatformStand = false
+			end
+
+			if humanoid.Sit then
+				humanoid.Sit = false
+			end
+		end
+
+		for _, descendant in ipairs(character:GetDescendants()) do
+			local isLocalScript = descendant:IsA("LocalScript")
+			local v
+
+			if isLocalScript then
+				v = string.find(string.lower(descendant.Name), "ragdoll") or string.find(string.lower(descendant.Name), "fall")
+			else
+				v = isLocalScript
+			end
+
+			if v then
+				descendant.Disabled = true
+			end
+		end
+
+		fn17(character)
+	end
+
+	local function fn19(arg)
+		if not arg then
+			return
+		end
+		fn18(arg)
+
+		for _, descendant in ipairs(arg:GetDescendants()) do
+			if descendant:IsA("Motor6D") then
+				fn(descendant:GetPropertyChangedSignal("Enabled"):Connect(function()
+					if descendant.Parent and not descendant.Enabled then
+						pcall(function()
+							descendant.Enabled = true
+						end)
+					end
+				end))
+			end
+		end
+
+		fn(arg.DescendantAdded:Connect(function(descendant)
+			if descendant:IsA("BallSocketConstraint") or descendant:IsA("HingeConstraint") or descendant:IsA("NoCollisionConstraint") then
+				task.defer(function()
+					if descendant.Parent then
+						pcall(function()
+							descendant:Destroy()
+						end)
+					end
+
+					if arg.Parent then
+						fn18(arg)
+					end
+				end)
+			elseif descendant:IsA("LocalScript") and (string.find(string.lower(descendant.Name), "ragdoll") or string.find(string.lower(descendant.Name), "fall")) then
+				pcall(function()
+					descendant.Disabled = true
+				end)
+			end
+		end))
+	end
+
+	local function fn20(godmode)
+		tbl3.godmode = godmode
+		local character = localPlayer.Character
+		if not character then
+			return
+		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+		if humanoid then
+			humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, not godmode)
+
+			if godmode and humanoid.Health < 100 then
+				humanoid.Health = 100
+			end
+		end
+
+		for _, descendant in ipairs(character:GetDescendants()) do
+			if descendant:IsA("BasePart") and godmode then
+				descendant.CanTouch = false
+
+				if descendant.Name == "HumanoidRootPart" then
+					descendant.CanCollide = true
+				else
+					descendant.CanCollide = false
+				end
+			end
+		end
+
+		fn18(character)
+	end
+
+	local function fn21()
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not character or not humanoid then
+			return false
+		end
+
+		pcall(function()
+			humanoid.BreakJointsOnDeath = false
+			local clone = humanoid:Clone()
+			clone.Parent = character
+			humanoid:Destroy()
+
+			if not clone:FindFirstChildOfClass("Animator") then
+				Instance.new("Animator").Parent = clone
+			end
+
+			if Workspace.CurrentCamera then
+				Workspace.CurrentCamera.CameraSubject = clone
+			end
+
+			local animate = character:FindFirstChild("Animate")
+
+			if animate and animate:IsA("LocalScript") then
+				animate.Disabled = true
+
+				task.defer(function()
+					task.wait(0.05)
+					animate.Disabled = false
+				end)
+			end
+
+			clone:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+			clone:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+			clone:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+			clone:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
+			clone.JumpPower = math.max(50, clone.JumpPower)
+			clone.JumpHeight = math.max(7.2, clone.JumpHeight)
+			clone:ChangeState(Enum.HumanoidStateType.Running)
+		end)
+
+		tbl3.swapped = true
+
+		if tbl3.godmode then
+			fn20(true)
+		end
+
+		fn19(character)
+		return true
+	end
+
+	local tbl8 = {
+		Secret = 800,
+		Cosmic = 700,
+		Mythic = 600,
+		Rainbow = 600,
+		Legendary = 500,
+		Epic = 400,
+		Rare = 300,
+		Uncommon = 200,
+		Common = 100,
+	}
+
+	local function fn22(arg)
+		return tostring(arg or ""):lower():gsub("[%s_%-%[%]%(%)%.'/\\]", "")
+	end
+
+	local function fn23()
+		if type(Assets) ~= "table" then
+			return nil
+		end
+		return Assets.Directory or Assets.Assets or Assets
+	end
+
+	local function fn24(arg)
+		local v = fn23()
+		if not v or not arg or arg == "" then
+			return nil
+		end
+
+		if v[arg] then
+			return v[arg]
+		end
+		local v2 = fn22(arg)
+
+		for k, v3 in pairs(v) do
+			if fn22(k) == v2 then
+				return v3
+			end
+
+			if type(v3) == "table" and (fn22(v3.DisplayName) == v2 or fn22(v3.Name) == v2) then
+				return v3
+			end
+		end
+
+		return nil
+	end
+
+	local function fn25(arg)
+		if arg == nil then
+			return ""
+		end
+
+		if type(arg) == "number" then
+			return "rbxassetid://" .. tostring(arg)
+		end
+		local str = tostring(arg)
+		if str == "" then
+			return ""
+		end
+
+		if str:match("^%d+$") then
+			return "rbxassetid://" .. str
+		end
+		return str
+	end
+
+	local function fn26(arg)
+		local str = tostring(arg.AssetCategory or arg.Category or arg.Name or "Egg")
+		local icon = arg.Icon or arg.Image or arg.Thumbnail or arg.Texture or arg.Decal
+		local v = fn24(str)
+
+		if type(v) == "table" then
+			icon = icon or v.Icon or v.Image or v.Thumbnail or v.Texture or v.Decal
+
+			if type(v.Pet) == "table" then
+				icon = icon or v.Pet.Icon or v.Pet.Image or v.Pet.Texture
+			end
+
+			if type(v.Egg) == "table" then
+				icon = icon or v.Egg.Icon or v.Egg.Image or v.Egg.Texture
+			end
+		end
+
+		return fn25(icon)
+	end
+
+	local function fn27(arg)
+		local rarity = arg.Rarity
+
+		if rarity then
+			local flag2 = type(rarity) == "table"
+
+			if flag2 then
+				flag2 = rarity.DisplayName or rarity._id or rarity.Name
+			end
+
+			return flag2 or tostring(rarity)
+		end
+
+		local v = fn23()
+		local assetCategory = arg.AssetCategory or arg.Category or arg.Name
+		if v and assetCategory and v[assetCategory] and v[assetCategory].Rarity then
+			local rarity2 = v[assetCategory].Rarity
+			return type(rarity2) == "table" and (rarity2.DisplayName or rarity2._id) or tostring(rarity2)
+		end
+		return "Common"
+	end
+
+	local function fn28(arg)
+		local mutations = arg.Mutations or arg.Mutation
+		local n2
+
+		if type(mutations) == "table" then
+			n2 = 1
+
+			for _, mutation in pairs(mutations) do
+				if type(mutation) == "table" then
+					n2 *= tonumber(mutation.Multiplier or mutation.Value or mutation.Scale) or 1.5
+				else
+					local str = tostring(mutation):lower()
+
+					if str:find("rainbow") then
+						n2 *= 3
+					elseif str:find("gold") then
+						n2 *= 2
+					elseif str:find("silver") then
+						n2 *= 1.5
+					elseif str:find("parasite") or str:find("monstrous") then
+						n2 *= 5
+					else
+						n2 *= 1.25
+					end
+				end
+			end
+		else
+			n2 = 1
+
+			if mutations then
+				n2 = 1.5
+			end
+		end
+
+		local n3
+
+		if arg.HasParasite then
+			n3 = n2 * 5
+		else
+			n3 = n2
+		end
+
+		return n3
+	end
+
+	local function fn29(arg)
+		local str = tostring(arg.AssetCategory or arg.Category or arg.Name or "Egg")
+		local v = fn24(str)
+		local num = tonumber(arg.Money or arg.Cash or arg.Income or arg.EarningRate or arg.Value or arg.Price)
+
+		if (not num or num <= 0) and type(v) == "table" then
+			num = tonumber(v.Money or v.Cash or v.Income or v.EarningRate or v.ProfileIncome or v.SalePrice or v.Price)
+
+			if (not num or num <= 0) and type(v.Egg) == "table" then
+				num = tonumber(v.Egg.Money or v.Egg.Income or v.Egg.EarningRate or v.Egg.SalePrice)
+			end
+		end
+
+		local n2 = tonumber(num) or 0
+		local n3 = tonumber(arg.AssetScale or arg.Scale or arg.NestScale) or 1
+		local n4 = n2 * n3 * fn28(arg)
+
+		if n4 <= 0 then
+			n4 = (tbl8[fn27(arg)] or 100) * math.max(tonumber(tostring(arg.AreaId or ""):match("%d+")) or 50, 50) * math.max(n3, 1)
+		end
+
+		return n4
+	end
+
+	fn4 = function(arg)
+		local n2 = tonumber(arg) or 0
+		if n2 >= 1e12 then
+			return string.format("%.2fT", n2 / 1e12)
+		end
+
+		if n2 >= 1e9 then
+			return string.format("%.2fB", n2 / 1e9)
+		end
+
+		if n2 >= 1000000 then
+			return string.format("%.2fM", n2 / 1000000)
+		end
+
+		if n2 >= 1000 then
+			return string.format("%.2fK", n2 / 1000)
+		end
+		return tostring(math.floor(n2 + 0.5))
+	end
+
+	local str = "chưa quét"
+
+	local function fn30(arg)
+		if not arg or not arg:IsA("Model") then
+			return false
+		end
+		local str2 = tostring(arg.Name or "")
+		if str2:find("FirstArea") then
+			return false
+		end
+		return arg:GetAttribute("UID") or arg:GetAttribute("Uid") or arg:GetAttribute("Category") or arg:GetAttribute("AssetCategory") or str2:lower():find("egg", 1, true)
+	end
+
+	local function fn31()
+		fn13()
+		local tbl9 = {}
+		local tbl10 = {}
+		local tbl11 = {}
+
+		local function fn32(arg, source)
+			if not arg or not arg.Uid then
+				return
+			end
+			local str2 = tostring(arg.Uid)
+			if tbl10[str2] then
+				return
+			end
+			tbl10[str2] = true
+			arg.__source = source
+			table.insert(tbl9, arg)
+		end
+
+		local areaEggSlotsClient = Workspace:FindFirstChild("AreaEggSlotsClient")
+
+		if areaEggSlotsClient then
+			local slots = 0
+
+			for _, child in ipairs(areaEggSlotsClient:GetChildren()) do
+				if fn30(child) then
+					local ok, result = pcall(function()
+						return child:GetPivot()
+					end)
+
+					if ok and result then
+						fn32({
+							Uid = child:GetAttribute("UID") or child:GetAttribute("Uid") or child.Name,
+							AssetCategory = child:GetAttribute("Category") or child:GetAttribute("AssetCategory") or child.Name,
+							AreaId = child:GetAttribute("AreaId") or child:GetAttribute("Area"),
+							Rarity = child:GetAttribute("Rarity"),
+							AssetScale = tonumber(child:GetAttribute("Scale") or child:GetAttribute("AssetScale")) or 1,
+							Mutations = child:GetAttribute("Mutations") or child:GetAttribute("Mutation"),
+							BoundsCFrame = result,
+							CFrame = result,
+							State = "Slot",
+							PhysicalModel = child,
+						}, "Slots")
+
+						slots += 1
+					end
+				end
+			end
+
+			tbl11[#tbl11 + 1] = "Slots=" .. slots
+		end
+
+		if EggState and EggState.ReadFieldEggs then
+			local v = nil
+			local flag2 = false
+
+			task.spawn(function()
+				local ok, result = pcall(EggState.ReadFieldEggs)
+
+				if ok and result then
+					v = result
+				end
+
+				flag2 = true
+			end)
+
+			local n2 = os.clock() + 1.5
+
+			while not flag2 and os.clock() < n2 do
+				RunService.Heartbeat:Wait()
+			end
+
+			if v then
+				local records = v.Records or v
+				local eggState = 0
+
+				if type(records) == "table" then
+					for _, record in pairs(records) do
+						local boundsCFrame = type(record) == "table" and record.Uid and record.BoundsCFrame
+
+						if boundsCFrame then
+							boundsCFrame = record.State == "Slot" or record.State == "Dropped" or record.State == nil
+						end
+
+						if boundsCFrame then
+							fn32(record, "EggState")
+							eggState += 1
+						end
+					end
+				end
+
+				tbl11[#tbl11 + 1] = "EggState=" .. eggState
+			elseif not flag2 then
+				tbl11[#tbl11 + 1] = "EggState=timeout"
+			else
+				tbl11[#tbl11 + 1] = "EggState=fail"
+			end
+		else
+			tbl11[#tbl11 + 1] = "EggState=nil"
+		end
+
+		str = table.concat(tbl11, " | ")
+		return tbl9
+	end
+
+	local function fn32(arg)
+		if not arg or not arg:IsA("Tool") then
+			return false
+		end
+		local str2 = tostring(arg:GetAttribute("ItemType") or ""):lower()
+		if str2 == "asset" or str2 == "gear" or str2 == "mutationconsumable" then
+			return false
+		end
+
+		if str2 == "egg" or str2 == "fieldegg" or str2 == "eggtool" then
+			return true
+		end
+
+		if arg:GetAttribute("IsEgg") == true or arg:GetAttribute("EggUid") ~= nil then
+			return true
+		end
+		return arg.Name:lower():find("egg", 1, true) ~= nil and (arg:GetAttribute("UID") ~= nil or arg:GetAttribute("Uid") ~= nil)
+	end
+
+	local function fn33(arg)
+		local character = localPlayer.Character
+
+		if character then
+			for _, child in ipairs(character:GetChildren()) do
+				if fn32(child) then
+					local attribute = child:GetAttribute("UID") or child:GetAttribute("Uid") or child:GetAttribute("EggUid")
+					if not arg or attribute == arg or not attribute then
+						return true
+					end
+				end
+			end
+		end
+
+		local backpack = localPlayer:FindFirstChild("Backpack")
+
+		if backpack then
+			for _, child in ipairs(backpack:GetChildren()) do
+				if fn32(child) then
+					local attribute = child:GetAttribute("UID") or child:GetAttribute("Uid") or child:GetAttribute("EggUid")
+					if not arg or attribute == arg or child.Name == tostring(arg) then
+						return true
+					end
+				end
+			end
+		end
+
+		if arg and EggState and EggState.ReadFieldEggs then
+			local ok, result = pcall(EggState.ReadFieldEggs)
+
+			if ok and result then
+				local records = result.Records or result
+
+				if type(records) == "table" then
+					for _, record in pairs(records) do
+						if type(record) == "table" and tostring(record.Uid) == tostring(arg) then
+							local flag2 = record.State == "Carried" or record.State == 2
+
+							if flag2 then
+								flag2 = tostring(record.CarrierUserId or record.Carrier) == tostring(localPlayer.UserId)
+							end
+
+							if flag2 then
+								return true
+							end
+						end
+					end
+				end
+			end
+		end
+
+		return false
+	end
+
+	local function fn34()
+		local character = localPlayer.Character
+
+		if character then
+			for _, child in ipairs(character:GetChildren()) do
+				if child:IsA("Tool") and fn32(child) then
+					local attribute = child:GetAttribute("UID") or child:GetAttribute("Uid") or child:GetAttribute("EggUid")
+					if attribute then
+						return attribute
+					end
+				end
+			end
+		end
+
+		if EggState and EggState.ReadFieldEggs then
+			local ok, result = pcall(EggState.ReadFieldEggs)
+
+			if ok and result then
+				local records = result.Records or result
+
+				if type(records) == "table" then
+					for _, record in pairs(records) do
+						if type(record) == "table" and record.Uid then
+							if (record.State == "Carried" or record.State == 2) and tostring(record.CarrierUserId or record.Carrier) == tostring(localPlayer.UserId) then
+								return record.Uid
+							end
+						end
+					end
+				end
+			end
+		end
+
+		return nil
+	end
+
+	local function fn35()
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local backpack = localPlayer:FindFirstChild("Backpack")
+
+		if humanoid then
+			pcall(function()
+				humanoid:UnequipTools()
+			end)
+		end
+
+		if character and backpack then
+			for _, child in ipairs(character:GetChildren()) do
+				if child:IsA("Tool") then
+					pcall(function()
+						child.Parent = backpack
+					end)
+				end
+			end
+		end
+	end
+
+	local function fn36(arg, arg2)
+		if arg then
+			for _, descendant in ipairs(arg:GetDescendants()) do
+				if descendant:IsA("ProximityPrompt") then
+					pcall(function()
+						descendant.RequiresLineOfSight = false
+						descendant.HoldDuration = 0
+
+						if typeof(fireproximityprompt) == "function" then
+							fireproximityprompt(descendant, 0)
+							fireproximityprompt(descendant)
+						end
+					end)
+				end
+			end
+		end
+
+		local areaEggSlotsClient = Workspace:FindFirstChild("AreaEggSlotsClient")
+
+		if areaEggSlotsClient and arg2 then
+			for _, child in ipairs(areaEggSlotsClient:GetChildren()) do
+				local basePart = child:FindFirstChildWhichIsA("BasePart") or child.PrimaryPart
+
+				if basePart and (basePart.Position - arg2).Magnitude <= 18 then
+					for _, descendant in ipairs(child:GetDescendants()) do
+						if descendant:IsA("ProximityPrompt") then
+							pcall(function()
+								descendant.RequiresLineOfSight = false
+								descendant.HoldDuration = 0
+
+								if typeof(fireproximityprompt) == "function" then
+									fireproximityprompt(descendant, 0)
+									fireproximityprompt(descendant)
+								end
+							end)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	local function fn37(arg, arg2)
+		local n2 = arg2 or 10
+
+		local function createPart(size, arg3, arg4)
+			local part = Instance.new("Part")
+			part.Name = string.char(math.random(97, 122)) .. tostring(math.random(1000, 9999))
+			part.Size = size
+			part.CFrame = CFrame.new(arg.X, (arg.Y or 72) + arg3, arg.Z)
+			part.Anchored = true
+			part.Transparency = 1
+			part.CanCollide = true
+			part.CanQuery = false
+			part.CanTouch = false
+			part.CastShadow = false
+			part.Material = Enum.Material.SmoothPlastic
+			part.Parent = Workspace
+
+			task.delay(arg4 or n2, function()
+				pcall(function()
+					if part.Parent then
+						part:Destroy()
+					end
+				end)
+			end)
+
+			return part
+		end
+
+		createPart(Vector3.new(36, 2, 36), -3.4, n2)
+		createPart(Vector3.new(18, 1.2, 18), -2.6, n2)
+		return true
+	end
+
+	local v = nil
+	local v2 = nil
+
+	local function fn38()
+		local function createPart(arg, size)
+			if arg and arg.Parent then
+				return arg
+			end
+			local part = Instance.new("Part")
+			part.Name = string.char(math.random(97, 122)) .. tostring(math.random(1000, 9999))
+			part.Size = size
+			part.Anchored = true
+			part.Transparency = 1
+			part.CanCollide = true
+			part.CanQuery = false
+			part.CanTouch = false
+			part.CastShadow = false
+			part.Material = Enum.Material.SmoothPlastic
+			part.Parent = Workspace
+			return part
+		end
+
+		v = createPart(v, Vector3.new(16, 1.2, 16))
+		v2 = createPart(v2, Vector3.new(28, 1.5, 28))
+		return v
+	end
+
+	fn5 = function(arg)
+		if not arg then
+			return
+		end
+		fn38()
+
+		pcall(function()
+			if v and v.Parent then
+				v.CFrame = CFrame.new(arg.X, arg.Y - 3.1, arg.Z)
+			end
+
+			if v2 and v2.Parent then
+				v2.CFrame = CFrame.new(arg.X, arg.Y - 3.8, arg.Z)
+			end
+		end)
+	end
+
+	fn6 = function()
+		if v then
+			pcall(function()
+				v:Destroy()
+			end)
+
+			v = nil
+		end
+
+		if v2 then
+			pcall(function()
+				v2:Destroy()
+			end)
+
+			v2 = nil
+		end
+	end
+
+	local function fn39(arg, arg2)
+		local character = localPlayer.Character
+		local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not humanoidRootPart then
+			return false
+		end
+
+		if humanoid then
+			humanoid.AutoRotate = false
+			humanoid.PlatformStand = false
+			humanoid.Sit = false
+		end
+
+		pcall(function()
+			humanoidRootPart.CanCollide = true
+			humanoidRootPart.Anchored = false
+		end)
+
+		local n2 = math.max(60, tonumber(arg2) or 850)
+		local position = arg.Position
+		local n3 = math.max(position.Y, 48)
+		fn37(Vector3.new(position.X, n3, position.Z), 12)
+
+		pcall(function()
+			localPlayer:RequestStreamAroundAsync(position)
+		end)
+
+		humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+		humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+		local now = os.clock()
+		local n4 = 0
+
+		while os.clock() - now < 18 do
+			if not (tbl3.isReturning and tbl2.running and not tbl3.securingEgg and not tbl3.teleporting) then
+				local character2 = localPlayer.Character
+				humanoidRootPart = character2 and character2:FindFirstChild("HumanoidRootPart")
+				humanoid = character2 and character2:FindFirstChildOfClass("Humanoid")
+
+				if not humanoidRootPart then
+					task.wait(0.05)
+					continue
+				else
+					pcall(function()
+						humanoidRootPart.CanCollide = true
+					end)
+
+					local position2 = humanoidRootPart.Position
+
+					if position2.Y < 20 then
+						pcall(function()
+							humanoidRootPart.CFrame = CFrame.new(position2.X, n3, position2.Z)
+							humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+						end)
+
+						fn37(Vector3.new(position2.X, n3, position2.Z), 6)
+					end
+
+					local vector = Vector3.new(position.X, n3, position.Z)
+
+					if (Vector2.new(position2.X, position2.Z) - Vector2.new(vector.X, vector.Z)).Magnitude <= 4 and math.abs(position2.Y - n3) <= 8 then
+						break
+					else
+						local result = RunService.Heartbeat:Wait()
+
+						if not humanoidRootPart.Parent then
+							continue
+						else
+							position2 = humanoidRootPart.Position
+							local vector2 = Vector3.new(vector.X, n3, vector.Z)
+							local n5 = vector2 - position2
+							local magnitude = n5.Magnitude
+
+							if magnitude < 0.8 then
+								break
+							else
+								local n6 = position2 + n5.Unit * math.min(magnitude, n2 * math.min(result, 0.1))
+								local vector3 = Vector3.new(n6.X, n3, n6.Z)
+								local vector4 = Vector3.new(vector2.X - vector3.X, 0, vector2.Z - vector3.Z)
+
+								if vector4.Magnitude < 0.05 then
+									vector4 = Vector3.new(humanoidRootPart.CFrame.LookVector.X, 0, humanoidRootPart.CFrame.LookVector.Z)
+								end
+
+								if vector4.Magnitude < 0.05 then
+									vector4 = Vector3.new(0, 0, -1)
+								end
+
+								humanoidRootPart.CFrame = CFrame.lookAt(vector3, vector3 + vector4)
+								humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+								humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+								pcall(fn5, vector3)
+
+								if os.clock() - n4 > 0.4 then
+									n4 = os.clock()
+									fn37(vector3, 4)
+								end
+
+								continue
+							end
+						end
+					end
+				end
+			end
+
+			break
+		end
+
+		humanoidRootPart = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+		if humanoidRootPart then
+			local z = position.Z
+			local cframe6 = CFrame.new(position.X, math.max(position.Y + 0.5, n3), z)
+			humanoidRootPart.CFrame = cframe6
+			humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+			humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+			humanoidRootPart.CanCollide = true
+			fn37(cframe6.Position, 8)
+		end
+
+		if humanoid then
+			humanoid.AutoRotate = true
+		end
+
+		return true
+	end
+
+	local function fn40(uid2, arg, arg2, arg3)
+		local character = localPlayer.Character
+		local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not character or not humanoidRootPart or not humanoid then
+			return false
+		end
+
+		if arg3 and n ~= arg3 then
+			return false
+		end
+		tbl3.securingEgg = true
+		tbl3.isReturning = false
+		tbl3.holdingEggForGuard = true
+		tbl4.uid = uid2
+		tbl4.lockAt = os.clock()
+		local position = arg.Position
+		fn37(position, 14)
+		humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+		humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+		fn18(character)
+
+		pcall(function()
+			localPlayer:RequestStreamAroundAsync(position)
+		end)
+
+		if not arg2 then
+			local areaEggSlotsClient = Workspace:FindFirstChild("AreaEggSlotsClient")
+
+			if areaEggSlotsClient then
+				for _, child in ipairs(areaEggSlotsClient:GetChildren()) do
+					local basePart = child:FindFirstChildWhichIsA("BasePart") or child.PrimaryPart
+					if basePart and (basePart.Position - position).Magnitude <= 16 then
+						arg2 = child
+						break
+					end
+				end
+			end
+		end
+
+		local flag2 = false
+		local n2 = arg * CFrame.new(0, 0.5, 0)
+		local n3 = os.clock() + 5
+		local n4 = 0
+
+		while true do
+			if tbl3.alive and tbl3.securingEgg and os.clock() < n3 then
+				if arg3 and n ~= arg3 then
+					tbl3.securingEgg = false
+					tbl3.holdingEggForGuard = false
+					return fn33(uid2)
+				end
+
+				if not tbl3.autoFarmLoop and not tbl3.teleporting and not tbl3.glidingToTarget then
+					tbl3.securingEgg = false
+					tbl3.holdingEggForGuard = false
+					return fn33(uid2)
+				end
+
+				if fn33(uid2) then
+					break
+				end
+
+				pcall(function()
+					character:PivotTo(n2)
+				end)
+
+				humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+				humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+				fn36(arg2, position)
+				local now = os.clock()
+
+				if uid2 and AskFieldEggCarry and not flag2 and now - n4 >= 0.22 then
+					flag2 = true
+
+					task.spawn(function()
+						pcall(function()
+							if AskFieldEggCarry:IsA("RemoteFunction") then
+								AskFieldEggCarry:InvokeServer({ Uid = uid2 })
+							else
+								AskFieldEggCarry:FireServer({ Uid = uid2 })
+							end
+						end)
+
+						flag2 = false
+					end)
+
+					n4 = now
+				end
+
+				RunService.Heartbeat:Wait()
+				continue
+			end
+
+			tbl3.securingEgg = false
+			tbl3.holdingEggForGuard = false
+			return fn33(uid2)
+		end
+
+		tbl3.securingEgg = false
+		tbl3.holdingEggForGuard = false
+		pcall(fn35)
+		return true
+	end
+
+	local function fn41(arg)
+		local character = localPlayer.Character
+		local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not character or not humanoidRootPart or not humanoid then
+			return false
+		end
+		local backpack = localPlayer:FindFirstChild("Backpack")
+
+		for _, child in ipairs(character:GetChildren()) do
+			if child:IsA("Tool") and not tbl3.holdingEggForGuard then
+				pcall(function()
+					if backpack then
+						child.Parent = backpack
+					else
+						child.Parent = Workspace
+					end
+				end)
+			end
+		end
+
+		humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+		humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+
+		pcall(function()
+			character:PivotTo(arg)
+		end)
+
+		humanoidRootPart.Anchored = true
+
+		for _, descendant in ipairs(character:GetDescendants()) do
+			if descendant:IsA("BasePart") then
+				descendant.AssemblyLinearVelocity = Vector3.zero
+				descendant.AssemblyAngularVelocity = Vector3.zero
+			end
+		end
+
+		humanoid:ChangeState(Enum.HumanoidStateType.Running)
+		task.wait(0.06)
+		humanoidRootPart.Anchored = false
+		humanoid:ChangeState(Enum.HumanoidStateType.Running)
+		return true
+	end
+
+	fn7 = function()
+		local character = localPlayer.Character
+		if not character then
+			return
+		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+		pcall(function()
+			if humanoid then
+				humanoid.PlatformStand = false
+				humanoid.Sit = false
+				humanoid.AutoRotate = true
+				humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+				humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+				humanoid:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+				humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
+				humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
+				humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
+
+				if humanoid.JumpPower < 50 then
+					humanoid.JumpPower = 50
+				end
+
+				if humanoid.JumpHeight and humanoid.JumpHeight < 7.2 then
+					humanoid.JumpHeight = 7.2
+				end
+
+				if humanoid.WalkSpeed < 16 then
+					humanoid.WalkSpeed = 16
+				end
+
+				humanoid:ChangeState(Enum.HumanoidStateType.Running)
+			end
+
+			if humanoidRootPart then
+				humanoidRootPart.Anchored = false
+			end
+
+			local animate = character:FindFirstChild("Animate")
+
+			if animate and animate:IsA("LocalScript") then
+				animate.Disabled = false
+			end
+
+			local currentCamera = Workspace.CurrentCamera
+
+			if currentCamera and humanoid then
+				currentCamera.CameraType = Enum.CameraType.Custom
+				currentCamera.CameraSubject = humanoid
+			end
+
+			for _, descendant in ipairs(character:GetDescendants()) do
+				if descendant:IsA("Motor6D") and not descendant.Enabled then
+					descendant.Enabled = true
+				end
+			end
+		end)
+	end
+
+	local function fn42()
+		if tbl2.running then
+			return
+		end
+		tbl2.running = true
+		tbl2.startedAt = os.clock()
+		tbl3.isReturning = true
+		local character = localPlayer.Character
+		local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+		if humanoidRootPart then
+			local position = humanoidRootPart.Position
+			local n2 = math.clamp(position.Y, 60, 76)
+
+			pcall(function()
+				humanoidRootPart.CFrame = CFrame.new(position.X, n2, position.Z)
+				humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+				humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+			end)
+		end
+
+		task.wait(0.05)
+		local now = os.clock()
+
+		while true do
+			if tbl3.alive and os.clock() - now < 30 then
+				local character2 = localPlayer.Character
+				local humanoidRootPart2 = character2 and character2:FindFirstChild("HumanoidRootPart")
+				local humanoid = character2 and character2:FindFirstChildOfClass("Humanoid")
+
+				if not humanoidRootPart2 then
+					task.wait(0.1)
+					continue
+				else
+					if humanoid then
+						pcall(function()
+							humanoid.AutoRotate = false
+						end)
+
+						pcall(function()
+							if humanoid.PlatformStand then
+								humanoid.PlatformStand = false
+							end
+
+							if humanoid.Sit then
+								humanoid.Sit = false
+							end
+
+							humanoid:ChangeState(Enum.HumanoidStateType.Running)
+
+							if humanoid.Health < 100 then
+								humanoid.Health = 100
+							end
+						end)
+					end
+
+					pcall(function()
+						for _, descendant in ipairs(character2:GetDescendants()) do
+							if descendant:IsA("Motor6D") and not descendant.Enabled then
+								descendant.Enabled = true
+							end
+						end
+					end)
+
+					local position = humanoidRootPart2.Position
+					pcall(fn5, position)
+
+					if position.X <= 533 and math.abs(position.Z - -360) < 15 then
+						pcall(function()
+							humanoidRootPart2.CFrame = CFrame.new(525, 72, -360)
+							humanoidRootPart2.AssemblyLinearVelocity = Vector3.zero
+							humanoidRootPart2.AssemblyAngularVelocity = Vector3.zero
+						end)
+
+						break
+					else
+						if position.Y < 45 then
+							pcall(function()
+								local z = position.Z
+								humanoidRootPart2.CFrame = CFrame.new(position.X, math.clamp(position.Y, 60, 76), z)
+								humanoidRootPart2.AssemblyLinearVelocity = Vector3.zero
+								humanoidRootPart2.AssemblyAngularVelocity = Vector3.zero
+							end)
+
+							task.wait(0.05)
+						else
+							local vector = Vector3.new(525 - position.X, 0, -360 - position.Z)
+							local unit
+
+							if vector.Magnitude > 0.5 then
+								unit = vector.Unit
+							else
+								unit = Vector3.new(-1, 0, 0)
+							end
+
+							local result = RunService.Heartbeat:Wait()
+
+							if humanoidRootPart2.Parent then
+								local position2 = humanoidRootPart2.Position
+								local magnitude = Vector3.new(525 - position2.X, 0, -360 - position2.Z).Magnitude
+								local n2 = math.min(850 * math.min(result, 0.08), magnitude)
+								local n3 = Vector3.new(position2.X, 72, position2.Z) + unit * n2
+								local vector2 = Vector3.new(n3.X, 72, n3.Z)
+								local vector3 = Vector3.new(unit.X, 0, unit.Z)
+
+								if vector3.Magnitude < 0.05 then
+									vector3 = Vector3.new(-1, 0, 0)
+								end
+
+								pcall(function()
+									humanoidRootPart2.CFrame = CFrame.lookAt(vector2, vector2 + vector3)
+									humanoidRootPart2.AssemblyLinearVelocity = Vector3.zero
+									humanoidRootPart2.AssemblyAngularVelocity = Vector3.zero
+								end)
+
+								pcall(fn5, vector2)
+							end
+						end
+
+						continue
+					end
+				end
+			end
+
+			break
+		end
+
+		tbl2.running = false
+		tbl3.isReturning = false
+		pcall(fn6)
+		pcall(fn7)
+	end
+
+	local function fn43(arg)
+		if ForestStrike and arg then
+			pcall(function()
+				local character = localPlayer.Character
+				character = character and character:FindFirstChild("HumanoidRootPart")
+				character = character and character.CFrame * CFrame.new(0, 0, -3) or CFrame.new()
+
+				if ForestStrike:IsA("RemoteFunction") then
+					ForestStrike:InvokeServer({ EggUid = arg, GuardCFrame = character })
+				else
+					ForestStrike:FireServer({ EggUid = arg, GuardCFrame = character })
+				end
+			end)
+		end
+	end
+
+	fn8 = function()
+		local character = localPlayer.Character
+		if not character then
+			return
+		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+		if not humanoid or not humanoidRootPart then
+			return
+		end
+		local currentCamera = Workspace.CurrentCamera
+		local cFrame = currentCamera and currentCamera.CFrame
+		local cameraType = currentCamera and currentCamera.CameraType
+
+		if currentCamera then
+			currentCamera.CameraType = Enum.CameraType.Scriptable
+			currentCamera.CFrame = cFrame
+		end
+
+		humanoid.BreakJointsOnDeath = false
+
+		for _, descendant in ipairs(character:GetDescendants()) do
+			if descendant:IsA("Motor6D") then
+				descendant.Enabled = true
+			end
+		end
+
+		for _, v3 in ipairs(tbl7) do
+			humanoid.PlatformStand = true
+			humanoid.Health = 100
+
+			pcall(function()
+				character:PivotTo(v3)
+			end)
+
+			humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+			humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+
+			if currentCamera then
+				currentCamera.CFrame = cFrame
+			end
+
+			task.wait(0.02)
+		end
+
+		local now = os.clock()
+		local v3 = tbl7[#tbl7]
+		local connection = nil
+
+		connection = RunService.Heartbeat:Connect(function()
+			if os.clock() - now > 0.35 then
+				if connection then
+					connection:Disconnect()
+				end
+
+				return
+			end
+
+			humanoid.Health = 100
+			humanoid.PlatformStand = true
+
+			pcall(function()
+				character:PivotTo(v3)
+			end)
+
+			humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+			humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+
+			if currentCamera then
+				currentCamera.CFrame = cFrame
+			end
+		end)
+
+		task.wait(0.35)
+
+		if connection then
+			pcall(function()
+				connection:Disconnect()
+			end)
+		end
+
+		humanoid.PlatformStand = false
+
+		if currentCamera then
+			currentCamera.CameraType = cameraType or Enum.CameraType.Custom
+		end
+	end
+
+	fn(localPlayer.CharacterAdded:Connect(function()
+		tbl3.swapped = false
+		tbl3.godmode = false
+		n += 1
+		tbl4.uid = nil
+		tbl4.complete = false
+	end))
+
+	local tbl9 = { enabled = true, sitting = false, lastAttempt = 0, cachedSeat = nil }
+	flag = false
+
+	local function fn44()
+		local plots = Workspace:FindFirstChild("Plots")
+		if not plots then
+			return nil
+		end
+
+		local ok, result = pcall(function()
+			return require(ReplicatedStorage.Client.PlotState)
+		end)
+
+		if ok and result and result.ResolveLocalSlot then
+			local ok2, result2 = pcall(result.ResolveLocalSlot)
+
+			if ok2 and result2 then
+				local v3 = plots:FindFirstChild(tostring(result2))
+				if v3 then
+					return v3
+				end
+			end
+		end
+
+		local userId = localPlayer.UserId
+		local name = localPlayer.Name
+		local displayName = localPlayer.DisplayName
+
+		local function fn45(arg)
+			return arg ~= nil and (arg == userId or tostring(arg) == tostring(userId) or arg == name or arg == displayName)
+		end
+
+		for _, child in ipairs(plots:GetChildren()) do
+			if fn45(child:GetAttribute("Owner") or child:GetAttribute("OwnerUserId") or child:GetAttribute("OwnerId") or child:GetAttribute("UserId") or child:GetAttribute("Player")) then
+				return child
+			end
+
+			for _, v3 in ipairs({ "Owner", "OwnerUserId", "OwnerId", "UserId", "Player", "PlayerName" }) do
+				local v4 = child:FindFirstChild(v3)
+				if v4 and fn45(v4.Value) then
+					return child
+				end
+			end
+		end
+
+		return nil
+	end
+
+	local function fn45(arg)
+		if not arg then
+			return nil
+		end
+		local treadmillBottom = arg:FindFirstChild("TreadmillBottom", true)
+
+		if treadmillBottom then
+			if treadmillBottom:IsA("Seat") or treadmillBottom:IsA("VehicleSeat") then
+				return treadmillBottom
+			end
+
+			for _, descendant in ipairs(treadmillBottom:GetDescendants()) do
+				if descendant:IsA("Seat") or descendant:IsA("VehicleSeat") then
+					return descendant
+				end
+			end
+
+			local parent = treadmillBottom.Parent
+
+			if parent and parent ~= Workspace then
+				for _, child in ipairs(parent:GetChildren()) do
+					if child:IsA("Seat") or child:IsA("VehicleSeat") then
+						return child
+					end
+				end
+			end
+		end
+
+		for _, descendant in ipairs(arg:GetDescendants()) do
+			if descendant:IsA("Seat") or descendant:IsA("VehicleSeat") then
+				local parent = descendant
+
+				for i = 1, 5 do
+					parent = parent.Parent
+					if not parent or parent == Workspace then
+						break
+					end
+
+					if tostring(parent.Name):lower():find("tread", 1, true) then
+						return descendant
+					end
+				end
+			end
+		end
+
+		return nil
+	end
+
+	local function fn46()
+		local v3 = fn44()
+		if not v3 then
+			return false
+		end
+		local cachedSeat = tbl9.cachedSeat
+
+		if not cachedSeat or not cachedSeat.Parent or not cachedSeat:IsDescendantOf(v3) then
+			cachedSeat = fn45(v3)
+			tbl9.cachedSeat = cachedSeat
+		end
+
+		if not cachedSeat or not cachedSeat.Parent then
+			return false
+		end
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+		if not humanoid or not humanoidRootPart or humanoid.Health <= 0 then
+			return false
+		end
+
+		if humanoid.Sit and humanoid.SeatPart == cachedSeat then
+			return true
+		end
+
+		pcall(function()
+			humanoidRootPart.CFrame = cachedSeat.CFrame * CFrame.new(0, 3, 0)
+			humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+			humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+			cachedSeat:Sit(humanoid)
+		end)
+
+		task.wait(0.1)
+		return humanoid.Sit == true and humanoid.SeatPart == cachedSeat
+	end
+
+	fn9 = function()
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+		if humanoid and humanoid.Sit then
+			pcall(function()
+				humanoid.Sit = false
+			end)
+
+			task.wait(0.05)
+			local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+			if humanoidRootPart then
+				pcall(function()
+					humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 4, 0)
+					humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+					humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+				end)
+			end
+		end
+	end
+
+	fn10 = function()
+		if not tbl9.enabled then
+			return
+		end
+		local v3 = flag
+		local running
+
+		if flag then
+			running = v3
+		else
+			running = tbl2.running
+		end
+
+		if running or tbl3.stealActive or tbl3.securingEgg then
+			if tbl9.sitting then
+				fn9()
+				tbl9.sitting = false
+			end
+
+			return
+		end
+
+		if tbl9.sitting then
+			local character = localPlayer.Character
+			character = character and character:FindFirstChildOfClass("Humanoid")
+			if character and character.Sit then
+				return
+			end
+			tbl9.sitting = false
+		end
+
+		local lastAttempt = tbl9.lastAttempt
+		if os.clock() - lastAttempt < 1.2 then
+			return
+		end
+		tbl9.lastAttempt = os.clock()
+
+		if fn46() then
+			tbl9.sitting = true
+		end
+	end
+
+	local function fn47(arg)
+		lhhDoctor.lastPos = nil
+		lhhDoctor.lastVel = nil
+		lhhDoctor.lastMove = os.clock()
+		lhhDoctor.autoStopAt = 0
+		lhhDoctor.uidRetry[arg] = (lhhDoctor.uidRetry[arg] or 0) + 1
+
+		if lhhDoctor.uidRetry[arg] > 3 then
+			local v3 = lhhDoctor.uidRetry[arg]
+			log("DOCTOR", "uid %s failed %d times - blacklist", tostring(arg), v3)
+			stolenUids[tostring(arg)] = true
+		end
+	end
+
+	fn11 = function(arg, arg2)
+		if flag then
+			return false, "Đang cướp rồi"
+		end
+
+		if tbl2.running then
+			return false, "Đang bay về"
+		end
+
+		if not arg or not arg.Uid or not arg.BoundsCFrame then
+			return false, "Thiếu data"
+		end
+		flag = true
+		tbl3.stealActive = true
+
+		if not tbl3.isReturning then
+			tbl2.running = false
+		end
+
+		tbl.active = true
+		fn47(arg.Uid)
+		local tbl10 = { ok = false, msg = "" }
+
+		local ok, result = pcall(function()
+			n += 1
+			local v3 = n
+			local uid2 = arg.Uid
+			local boundsCFrame = arg.BoundsCFrame
+			local physicalModel = arg.PhysicalModel
+			tbl3.autoFarmLoop = true
+			tbl3.pureTweenFarm = false
+			tbl3.teleporting = true
+			tbl3.securingEgg = false
+			tbl3.isReturning = false
+			tbl4.uid = uid2
+			tbl4.mode = "WARP"
+			tbl4.session = v3
+			tbl4.complete = false
+
+			if arg2 then
+				arg2("[1] Setup...")
+			end
+
+			if not tbl3.swapped then
+				local ok, result = pcall(fn21)
+
+				if not ok or not result then
+					tbl3.autoFarmLoop = false
+					tbl3.teleporting = false
+					tbl3.securingEgg = false
+					tbl3.holdingEggForGuard = false
+					tbl4.uid = nil
+					tbl10.ok = false
+					tbl10.msg = "Bypass fail"
+					return
+				end
+			end
+
+			fn18(localPlayer.Character)
+			fn17(localPlayer.Character)
+
+			if not tbl3.godmode then
+				fn20(true)
+			end
+
+			task.wait(0.2)
+			local position = fn2()
+			position = position and position.Position
+			local position2 = boundsCFrame.Position
+			local magnitude = position and (position - position2).Magnitude or math.huge
+			local flag2 = magnitude <= 150
+
+			if arg2 then
+				arg2(string.format("[2] Dist=%.0f%s", magnitude, flag2 and " (GẦN - skip)" or ""))
+			end
+
+			if not flag2 then
+				if not fn34() then
+					if arg2 then
+						arg2("[2a] Tìm Lake egg...")
+					end
+
+					local flag3 = false
+
+					for i = 1, 3 do
+						if fn34() then
+							flag3 = true
+							break
+						else
+							local v4 = fn31()
+							local v5 = fn2()
+							local v6 = nil
+
+							if v5 then
+								local huge = math.huge
+								v6 = nil
+
+								for _, v7 in ipairs(v4) do
+									if v7.BoundsCFrame then
+										local v8 = string.lower(tostring(v7.AreaId or ""))
+										local v9 = string.lower(tostring(v7.Uid or ""))
+
+										if v8 == "lake" or v8:find("lake") or v9:find("lake") then
+											local magnitude2 = (v7.BoundsCFrame.Position - v5.Position).Magnitude
+
+											if magnitude2 < huge then
+												huge = magnitude2
+												v6 = v7
+											end
+										end
+									end
+								end
+							end
+
+							if v6 then
+								fn39(v6.BoundsCFrame, 850)
+								task.wait(0.15)
+								fn40(v6.Uid, v6.BoundsCFrame, v6.PhysicalModel, v3)
+								task.wait(0.1)
+							end
+
+							task.wait(0.2)
+						end
+					end
+
+					if not flag3 and not fn34() then
+						if arg2 then
+							arg2("[2a] ✗ Lake fail, thử đi thẳng")
+						end
+					end
+				end
+
+				if n ~= v3 then
+					tbl3.autoFarmLoop = false
+					tbl3.teleporting = false
+					tbl4.uid = nil
+					tbl10.ok = false
+					tbl10.msg = "Aborted"
+					return
+				end
+
+				if arg2 then
+					arg2("[2b] Bounce...")
+				end
+
+				pcall(function()
+					localPlayer:RequestStreamAroundAsync(position2)
+				end)
+
+				local character = localPlayer.Character
+				local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+				character = character and character:FindFirstChild("HumanoidRootPart")
+				local v4 = humanoid and character
+				local flag3 = false
+
+				if v4 then
+					local walkSpeed = humanoid.WalkSpeed > 0 and humanoid.WalkSpeed or 16
+					humanoid.WalkSpeed = 0
+					humanoid:Move(Vector3.zero, false)
+					character.AssemblyLinearVelocity = Vector3.zero
+					character.AssemblyAngularVelocity = Vector3.zero
+					task.wait(0.04)
+					local position3 = character.Position
+					local y = position3.Y
+					local v5 = fn34()
+					local flag4 = false
+					local connection = nil
+
+					if SpeedTollOffer and SpeedTollOffer:IsA("RemoteEvent") then
+						connection = SpeedTollOffer.OnClientEvent:Connect(function()
+							flag4 = true
+
+							if connection then
+								connection:Disconnect()
+							end
+						end)
+					end
+
+					fn43(v5)
+					local now = os.clock()
+					local flag5 = false
+
+					while true do
+						if os.clock() - now < 2.5 and tbl3.alive then
+							if n == v3 then
+								local v6 = fn2()
+								local n2, assemblyLinearVelocity, position4, n3, magnitude2, flag6, flag7, flag8
+
+								if v6 then
+									local magnitude3 = (v6.Position - position2).Magnitude
+
+									if not (magnitude3 <= 150 and magnitude3 > 0) then
+										n2 = os.clock() - now
+										assemblyLinearVelocity = character.AssemblyLinearVelocity
+										position4 = character.Position
+										n3 = position4.Y - y
+										magnitude2 = (position4 - position3).Magnitude
+
+										if not (n2 >= 0.08) then
+											flag6 = n2 >= 0.5
+											flag7 = flag6 and not flag5
+
+											if flag7 then
+												fn43(v5)
+												flag5 = true
+											end
+
+											RunService.Heartbeat:Wait()
+											continue
+										else
+											flag8 = flag4 or assemblyLinearVelocity.Y >= 10 or n3 >= 1.5 and assemblyLinearVelocity.Magnitude >= 16 or magnitude2 >= 2 or assemblyLinearVelocity.Magnitude >= 20
+
+											if flag8 then
+												flag3 = true
+												break
+											else
+												flag6 = n2 >= 0.5
+												flag7 = flag6 and not flag5
+
+												if flag7 then
+													fn43(v5)
+													flag5 = true
+												end
+
+												RunService.Heartbeat:Wait()
+												continue
+											end
+										end
+									end
+								else
+									n2 = os.clock() - now
+									assemblyLinearVelocity = character.AssemblyLinearVelocity
+									position4 = character.Position
+									n3 = position4.Y - y
+									magnitude2 = (position4 - position3).Magnitude
+
+									if not (n2 >= 0.08) then
+										flag6 = n2 >= 0.5
+										flag7 = flag6 and not flag5
+
+										if flag7 then
+											fn43(v5)
+											flag5 = true
+										end
+
+										RunService.Heartbeat:Wait()
+										continue
+									else
+										flag8 = flag4 or assemblyLinearVelocity.Y >= 10 or n3 >= 1.5 and assemblyLinearVelocity.Magnitude >= 16 or magnitude2 >= 2 or assemblyLinearVelocity.Magnitude >= 20
+
+										if flag8 then
+											flag3 = true
+											break
+										else
+											flag6 = n2 >= 0.5
+											flag7 = flag6 and not flag5
+
+											if flag7 then
+												fn43(v5)
+												flag5 = true
+											end
+
+											RunService.Heartbeat:Wait()
+											continue
+										end
+									end
+								end
+							end
+						end
+
+						break
+					end
+
+					if connection then
+						connection:Disconnect()
+					end
+
+					humanoid.WalkSpeed = walkSpeed
+				end
+
+				if arg2 then
+					arg2("[2b] " .. (flag3 and "✓" or "✗"))
+				end
+			elseif arg2 then
+				arg2("[2] Skip prep (đã gần)")
+			end
+
+			if n ~= v3 then
+				tbl3.autoFarmLoop = false
+				tbl3.teleporting = false
+				tbl4.uid = nil
+				tbl10.ok = false
+				tbl10.msg = "Aborted"
+				return
+			end
+
+			if arg2 then
+				arg2("[3] WARP tới trứng...")
+			end
+
+			fn37(position2, 8)
+			fn41(boundsCFrame * CFrame.new(0, 0.5, 0))
+			task.wait(0.02)
+
+			if arg2 then
+				arg2("[4] Nhặt trứng...")
+			end
+
+			local v4 = fn40(uid2, boundsCFrame, physicalModel, v3)
+
+			if arg2 then
+				arg2("[5] Anti-hit...")
+			end
+
+			fn8()
+			tbl3.autoFarmLoop = false
+			tbl3.teleporting = false
+			tbl4.uid = nil
+
+			if v4 then
+				if arg2 then
+					arg2("✓ Xong")
+				end
+
+				tbl10.ok = true
+				tbl10.msg = "Đã cướp xong"
+			else
+				if arg2 then
+					arg2("✗ Không nhặt được")
+				end
+
+				tbl10.ok = false
+				tbl10.msg = "Không nhặt được"
+			end
+		end)
+
+		flag = false
+		tbl3.stealActive = false
+
+		if not ok then
+			tbl3.autoFarmLoop = false
+			tbl3.teleporting = false
+			tbl3.securingEgg = false
+			tbl3.holdingEggForGuard = false
+			tbl3.isReturning = false
+			tbl4.uid = nil
+			return false, "Lỗi: " .. tostring(result)
+		end
+
+		if not tbl10.ok then
+			local v3 = tostring
+			local msg = tbl10.msg
+			log("FAIL", "steal uid=%s msg=%s", tostring(arg.Uid), v3(msg))
+			lhhDoctor.retry = lhhDoctor.retry + 1
+		end
+
+		if not tbl2.running then
+			task.spawn(function()
+				task.wait(0.15)
+				fn42()
+				task.wait(0.2)
+				pcall(fn7)
+
+				pcall(function()
+					fn20(false)
+				end)
+
+				tbl3.godmode = false
+				tbl3.swapped = false
+				tbl.active = false
+			end)
+		else
+			task.defer(function()
+				pcall(fn7)
+
+				pcall(function()
+					fn20(false)
+				end)
+
+				tbl3.godmode = false
+				tbl3.swapped = false
+				tbl.active = false
+			end)
+		end
+
+		return tbl10.ok, tbl10.msg
+	end
+
+	tbl5 = {}
+	tbl6 = {}
+	uid = nil
+	game:GetService("TweenService")
+	game:GetService("GuiService")
+
+	fn12 = function()
+		local v3 = fn31()
+		local tbl10 = {}
+
+		for _, v4 in ipairs(v3) do
+			if v4.Uid and not tbl5[tostring(v4.Uid)] then
+				table.insert(tbl10, {
+					record = v4,
+					uid = v4.Uid,
+					money = fn29(v4),
+					icon = fn26(v4),
+					name = tostring(v4.AssetCategory or v4.Category or v4.Name or "Egg"),
+					rarity = fn27(v4),
+				})
+			end
+		end
+
+		table.sort(tbl10, function(arg, arg2)
+			return arg.money > arg2.money
+		end)
+
+		local tbl11 = {}
+
+		for i = 1, math.min(10, #tbl10) do
+			tbl11[i] = tbl10[i]
+		end
+
+		tbl6 = tbl11
+		return tbl11, #v3
+	end
+end
+
+task.spawn(function()
+	while true do
+		task.wait(0.12)
+
+		if not (lhhInst2 and lhhInst2.dead) then
+			local v = tbl3
+
+			if v then
+				if v.isReturning or v.teleporting or v.securingEgg or v.stealActive or tbl2.running then
+					local character = localPlayer.Character
+					local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+					if humanoidRootPart then
+						pcall(function()
+							local assemblyLinearVelocity = humanoidRootPart.AssemblyLinearVelocity
+
+							if assemblyLinearVelocity.Magnitude > 500 then
+								local n2 = assemblyLinearVelocity.Z * 0.3
+								humanoidRootPart.AssemblyLinearVelocity = Vector3.new(assemblyLinearVelocity.X * 0.3, math.clamp(assemblyLinearVelocity.Y, -80, 120), n2)
+							end
+
+							if humanoidRootPart.AssemblyAngularVelocity.Magnitude > 60 then
+								humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+							end
+
+							if fn5 then
+								fn5(humanoidRootPart.Position)
+							end
+						end)
+					end
+				end
+			end
+
+			continue
+		end
+
+		break
+	end
+end)
+
+local TweenService
+TweenService = game:GetService("TweenService")
+local UserInputService
+UserInputService = game:GetService("UserInputService")
+local currentCamera, fn13, visible, flag2, tbl7, screenGui
+
+do
+	local CoreGui = game:GetService("CoreGui")
+	currentCamera = Workspace.CurrentCamera
+
+	local function fn14()
+		local hui = nil
+
+		pcall(function()
+			hui = gethui()
+		end)
+
+		if hui then
+			return hui
+		end
+
+		pcall(function()
+			hui = CoreGui
+		end)
+
+		return hui or localPlayer:WaitForChild("PlayerGui")
+	end
+
+	local v = fn14()
+
+	pcall(function()
+		if _G.__LHH_INST and _G.__LHH_INST.guis then
+			for _, gui in ipairs(_G.__LHH_INST.guis) do
+				pcall(function()
+					gui:Destroy()
+				end)
+			end
+		end
+	end)
+
+	fn13 = function(arg)
+		local str = ""
+
+		for i = 1, arg do
+			str ..= string.char(math.random(97, 122))
+		end
+
+		return str
+	end
+
+	visible = true
+	flag2 = false
+
+	tbl7 = {
+		bg = Color3.fromRGB(22, 24, 32),
+		panel = Color3.fromRGB(28, 30, 40),
+		stroke = Color3.fromRGB(160, 180, 220),
+		accent = Color3.fromRGB(96, 180, 255),
+		text = Color3.fromRGB(245, 247, 255),
+		muted = Color3.fromRGB(150, 155, 170),
+		green = Color3.fromRGB(80, 220, 150),
+		red = Color3.fromRGB(230, 90, 110),
+		gold = Color3.fromRGB(255, 210, 100),
+	}
+
+	screenGui = Instance.new("ScreenGui")
+	screenGui.Name = fn13(10)
+	screenGui.ResetOnSpawn = false
+	screenGui.IgnoreGuiInset = true
+	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.DisplayOrder = math.random(40, 80)
+	screenGui.Parent = v
+end
+
+table.insert(lhhInst2.guis, screenGui)
+local textButton, frame
+
+local function createUIStroke(arg, backgroundTransparency, arg2)
+	arg.BackgroundColor3 = tbl7.bg
+	arg.BackgroundTransparency = backgroundTransparency or 0.15
+	arg.BorderSizePixel = 0
+	Instance.new("UICorner", arg).CornerRadius = UDim.new(0, arg2 or 12)
+	local uiStroke = Instance.new("UIStroke", arg)
+	uiStroke.Color = tbl7.stroke
+	uiStroke.Transparency = 0.65
+	uiStroke.Thickness = 1.1
+	return uiStroke
+end
+
+textButton = Instance.new("TextButton")
+textButton.Size = UDim2.fromOffset(96, 32)
+textButton.Position = UDim2.new(0, 12, 0.42, 0)
+textButton.Text = "ON"
+textButton.TextColor3 = tbl7.green
+textButton.Font = Enum.Font.GothamBold
+textButton.TextSize = 11
+textButton.AutoButtonColor = false
+textButton.ZIndex = 90
+textButton.Parent = screenGui
+createUIStroke(textButton, 0.12, 9)
+frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(268, 240)
+frame.Position = UDim2.new(0.5, -134, 0.5, -86)
+frame.Parent = screenGui
+createUIStroke(frame, 0.12, 12)
+local frame2
+frame2 = Instance.new("Frame")
+frame2.Size = UDim2.new(1, 0, 0, 46)
+frame2.BackgroundTransparency = 1
+frame2.Active = true
+frame2.ZIndex = 2
+frame2.Parent = frame
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(1, -72, 0, 20)
+textLabel.Position = UDim2.fromOffset(12, 8)
+textLabel.BackgroundTransparency = 1
+textLabel.Text = "LongHiHi Hub"
+textLabel.TextColor3 = tbl7.text
+textLabel.Font = Enum.Font.GothamBlack
+textLabel.TextSize = 15
+textLabel.TextXAlignment = Enum.TextXAlignment.Left
+textLabel.ZIndex = 3
+textLabel.Parent = frame2
+local textLabel2 = Instance.new("TextLabel")
+textLabel2.Size = UDim2.new(1, -72, 0, 14)
+textLabel2.Position = UDim2.fromOffset(12, 28)
+textLabel2.BackgroundTransparency = 1
+textLabel2.Text = "True V2 (Beta)"
+textLabel2.TextColor3 = tbl7.accent
+textLabel2.Font = Enum.Font.GothamSemibold
+textLabel2.TextSize = 11
+textLabel2.TextXAlignment = Enum.TextXAlignment.Left
+textLabel2.ZIndex = 3
+textLabel2.Parent = frame2
+game:GetService("HttpService")
+game:GetService("TeleportService")
+
+do
+	local flag3 = true
+	local flag4 = false
+	local size = frame.Size
+
+	local function createTextButton(parent, text, arg)
+		local textButton2 = Instance.new("TextButton")
+		textButton2.Size = UDim2.fromOffset(24, 24)
+		textButton2.Position = UDim2.new(1, arg, 0, 10)
+		textButton2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		textButton2.BackgroundTransparency = 0.9
+		textButton2.Text = text
+		textButton2.TextColor3 = tbl7.text
+		textButton2.Font = Enum.Font.GothamBold
+		textButton2.TextSize = 16
+		textButton2.AutoButtonColor = false
+		textButton2.ZIndex = 8
+		textButton2.Parent = parent
+		Instance.new("UICorner", textButton2).CornerRadius = UDim.new(0, 6)
+		local uiStroke = Instance.new("UIStroke", textButton2)
+		uiStroke.Color = tbl7.stroke
+		uiStroke.Transparency = 0.5
+		uiStroke.Thickness = 1
+		return textButton2
+	end
+
+	local v = createTextButton(frame2, "−", -56)
+	local v2 = createTextButton(frame2, "+", -28)
+	local textButton2 = Instance.new("TextButton")
+	textButton2.Size = UDim2.fromOffset(160, 28)
+	textButton2.Position = UDim2.new(0.5, -80, 0, 0)
+	textButton2.BackgroundColor3 = tbl7.bg
+	textButton2.BackgroundTransparency = 0.12
+	textButton2.Text = "LongHiHi Hub"
+	textButton2.TextColor3 = tbl7.text
+	textButton2.Font = Enum.Font.GothamBold
+	textButton2.TextSize = 12
+	textButton2.Visible = false
+	textButton2.AutoButtonColor = false
+	textButton2.ZIndex = 90
+	textButton2.Parent = screenGui
+	Instance.new("UICorner", textButton2).CornerRadius = UDim.new(0, 8)
+	local uiStroke = Instance.new("UIStroke", textButton2)
+	uiStroke.Color = tbl7.stroke
+	uiStroke.Transparency = 0.55
+	local frame3 = Instance.new("Frame")
+	frame3.Size = UDim2.fromOffset(0, 88)
+	frame3.Position = UDim2.new(1, 6, 0, 0)
+	frame3.BackgroundColor3 = tbl7.panel
+	frame3.BackgroundTransparency = 0.08
+	frame3.BorderSizePixel = 0
+	frame3.ClipsDescendants = true
+	frame3.Visible = false
+	frame3.ZIndex = 20
+	frame3.Parent = frame
+	Instance.new("UICorner", frame3).CornerRadius = UDim.new(0, 10)
+	local uiStroke2 = Instance.new("UIStroke", frame3)
+	uiStroke2.Color = tbl7.stroke
+	uiStroke2.Transparency = 0.5
+	local textLabel3 = Instance.new("TextLabel")
+	textLabel3.Size = UDim2.new(1, -12, 0, 18)
+	textLabel3.Position = UDim2.fromOffset(8, 6)
+	textLabel3.BackgroundTransparency = 1
+	textLabel3.Text = "Discord"
+	textLabel3.TextColor3 = tbl7.muted
+	textLabel3.Font = Enum.Font.GothamSemibold
+	textLabel3.TextSize = 10
+	textLabel3.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel3.ZIndex = 21
+	textLabel3.Parent = frame3
+	local textButton3 = Instance.new("TextButton")
+	textButton3.Size = UDim2.new(1, -16, 0, 34)
+	textButton3.Position = UDim2.fromOffset(8, 28)
+	textButton3.BackgroundColor3 = tbl7.accent
+	textButton3.BackgroundTransparency = 0.25
+	textButton3.Text = "Copy Server Discord"
+	textButton3.TextColor3 = tbl7.text
+	textButton3.Font = Enum.Font.GothamBold
+	textButton3.TextSize = 12
+	textButton3.AutoButtonColor = false
+	textButton3.ZIndex = 21
+	textButton3.Parent = frame3
+	Instance.new("UICorner", textButton3).CornerRadius = UDim.new(0, 7)
+	local textLabel4 = Instance.new("TextLabel")
+	textLabel4.Size = UDim2.new(1, -12, 0, 16)
+	textLabel4.Position = UDim2.fromOffset(8, 66)
+	textLabel4.BackgroundTransparency = 1
+	textLabel4.Text = ""
+	textLabel4.TextColor3 = tbl7.muted
+	textLabel4.Font = Enum.Font.Gotham
+	textLabel4.TextSize = 9
+	textLabel4.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel4.TextTruncate = Enum.TextTruncate.AtEnd
+	textLabel4.ZIndex = 21
+	textLabel4.Parent = frame3
+
+	local function fn14()
+		flag4 = true
+		frame3.Visible = true
+		frame3.Size = UDim2.fromOffset(0, 88)
+		TweenService:Create(frame3, TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(150, 88) }):Play()
+		v2.Text = "×"
+	end
+
+	local function fn15()
+		flag4 = false
+		v2.Text = "+"
+		local tween = TweenService:Create(frame3, TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.In), { Size = UDim2.fromOffset(0, 88) })
+		tween:Play()
+
+		tween.Completed:Connect(function()
+			if not flag4 then
+				frame3.Visible = false
+			end
+		end)
+	end
+
+	local function fn16()
+		flag3 = false
+		fn15()
+
+		if flag2 then
+			pcall(closeListPanel)
+		end
+
+		local tween = TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.In), { Size = UDim2.fromOffset(160, 28), BackgroundTransparency = 1 })
+		tween:Play()
+
+		tween.Completed:Connect(function()
+			if not flag3 then
+				frame.Visible = false
+				textButton2.Position = UDim2.new(frame.Position.X.Scale, frame.Position.X.Offset, frame.Position.Y.Scale, frame.Position.Y.Offset)
+				textButton2.Visible = true
+			end
+		end)
+	end
+
+	local function fn17()
+		flag3 = true
+		textButton2.Visible = false
+		frame.Visible = true
+		frame.BackgroundTransparency = 0.12
+		frame.Size = UDim2.fromOffset(0, 28)
+		local tbl8 = { Size = size }
+		TweenService:Create(frame, TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), tbl8):Play()
+	end
+
+	v2.MouseButton1Click:Connect(function()
+		if not visible or not flag3 then
+			return
+		end
+
+		if flag4 then
+			fn15()
+		else
+			fn14()
+		end
+	end)
+
+	v.MouseButton1Click:Connect(function()
+		if not visible then
+			return
+		end
+
+		if flag3 then
+			fn16()
+		end
+	end)
+
+	local flag5 = false
+	local position = nil
+	local position2 = nil
+	local flag6 = false
+
+	textButton2.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag5 = true
+			flag6 = false
+			position = input.Position
+			position2 = textButton2.Position
+		end
+	end)
+
+	textButton2.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag5 = false
+
+			if not flag6 then
+				fn17()
+			end
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if flag5 and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local n2 = input.Position - position
+
+			if n2.Magnitude > 4 then
+				flag6 = true
+			end
+
+			textButton2.Position = UDim2.new(position2.X.Scale, position2.X.Offset + n2.X, position2.Y.Scale, position2.Y.Offset + n2.Y)
+		end
+	end)
+
+	textButton2.Active = true
+	local text = "https://discord.gg/fsea4nu6ca"
+
+	local function fn18()
+		local flag7 = false
+
+		pcall(function()
+			if typeof(setclipboard) == "function" then
+				setclipboard("https://discord.gg/fsea4nu6ca")
+				flag7 = true
+			end
+		end)
+
+		if not flag7 then
+			pcall(function()
+				if typeof(toclipboard) == "function" then
+					toclipboard("https://discord.gg/fsea4nu6ca")
+					flag7 = true
+				end
+			end)
+		end
+
+		if flag7 then
+			textLabel4.Text = "Copied!"
+			textLabel4.TextColor3 = tbl7.green
+			fn3("LongHiHi Hub", "Discord link copied")
+		else
+			textLabel4.Text = text
+			textLabel4.TextColor3 = tbl7.muted
+			fn3("LongHiHi Hub", "https://discord.gg/fsea4nu6ca")
+			print("[LHH] Discord:", "https://discord.gg/fsea4nu6ca")
+		end
+	end
+
+	textButton3.MouseButton1Click:Connect(function()
+		if not visible then
+			return
+		end
+		fn18()
+	end)
+end
+
+local fn14
+
+fn14 = function()
+end
+
+local textButton2
+textButton2 = Instance.new("TextButton")
+textButton2.Size = UDim2.new(1, -20, 0, 30)
+textButton2.Position = UDim2.fromOffset(10, 54)
+textButton2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+textButton2.BackgroundTransparency = 0.92
+textButton2.Text = ""
+textButton2.AutoButtonColor = false
+textButton2.ZIndex = 4
+textButton2.Parent = frame
+Instance.new("UICorner", textButton2).CornerRadius = UDim.new(0, 8)
+local stroke = tbl7.stroke
+Instance.new("UIStroke", textButton2).Color = stroke
+textButton2:FindFirstChildOfClass("UIStroke").Transparency = 0.55
+local textLabel3
+textLabel3 = Instance.new("TextLabel")
+textLabel3.Size = UDim2.new(1, -32, 1, 0)
+textLabel3.Position = UDim2.fromOffset(10, 0)
+textLabel3.BackgroundTransparency = 1
+textLabel3.Text = "Select Egg (BEST)"
+textLabel3.TextColor3 = tbl7.text
+textLabel3.Font = Enum.Font.GothamSemibold
+textLabel3.TextSize = 12
+textLabel3.TextXAlignment = Enum.TextXAlignment.Left
+textLabel3.TextTruncate = Enum.TextTruncate.AtEnd
+textLabel3.ZIndex = 5
+textLabel3.Parent = textButton2
+local flag3, textButton3, flag4, espRareEggs, v
+
+do
+	local imageLabel = Instance.new("ImageLabel")
+	imageLabel.Image = "rbxassetid://10709790948"
+	imageLabel.Size = UDim2.fromOffset(16, 16)
+	imageLabel.AnchorPoint = Vector2.new(1, 0.5)
+	imageLabel.Position = UDim2.new(1, -8, 0.5, 0)
+	imageLabel.BackgroundTransparency = 1
+	imageLabel.ImageColor3 = tbl7.muted
+	imageLabel.ZIndex = 5
+	imageLabel.Parent = textButton2
+	flag3 = false
+	textButton3 = Instance.new("TextButton")
+	textButton3.Size = UDim2.new(1, -20, 0, 30)
+	textButton3.Position = UDim2.fromOffset(10, 92)
+	textButton3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	textButton3.BackgroundTransparency = 0.92
+	textButton3.Text = ""
+	textButton3.AutoButtonColor = false
+	textButton3.ZIndex = 4
+	textButton3.Parent = frame
+	Instance.new("UICorner", textButton3).CornerRadius = UDim.new(0, 8)
+	local uiStroke = Instance.new("UIStroke", textButton3)
+	uiStroke.Color = tbl7.stroke
+	uiStroke.Transparency = 0.55
+	local frame3 = Instance.new("Frame")
+	frame3.Size = UDim2.fromOffset(20, 20)
+	frame3.Position = UDim2.fromOffset(8, 5)
+	frame3.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+	frame3.BorderSizePixel = 0
+	frame3.ZIndex = 5
+	frame3.Parent = textButton3
+	Instance.new("UICorner", frame3).CornerRadius = UDim.new(0, 4)
+	local uiStroke2 = Instance.new("UIStroke", frame3)
+	uiStroke2.Color = tbl7.muted
+	uiStroke2.Thickness = 1.2
+	local textLabel4 = Instance.new("TextLabel")
+	textLabel4.Size = UDim2.fromScale(1, 1)
+	textLabel4.BackgroundTransparency = 1
+	textLabel4.Text = "✓"
+	textLabel4.TextColor3 = Color3.fromRGB(20, 30, 28)
+	textLabel4.Font = Enum.Font.GothamBlack
+	textLabel4.TextSize = 15
+	textLabel4.TextXAlignment = Enum.TextXAlignment.Center
+	textLabel4.TextYAlignment = Enum.TextYAlignment.Center
+	textLabel4.Visible = false
+	textLabel4.ZIndex = 6
+	textLabel4.Parent = frame3
+	local textLabel5 = Instance.new("TextLabel")
+	textLabel5.Size = UDim2.new(1, -38, 1, 0)
+	textLabel5.Position = UDim2.fromOffset(34, 0)
+	textLabel5.BackgroundTransparency = 1
+	textLabel5.Text = "Auto Farm Event"
+	textLabel5.TextColor3 = tbl7.text
+	textLabel5.Font = Enum.Font.GothamSemibold
+	textLabel5.TextSize = 12
+	textLabel5.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel5.ZIndex = 5
+	textLabel5.Parent = textButton3
+
+	local function fn15(arg, text)
+		local textButton4 = Instance.new("TextButton")
+		textButton4.Size = UDim2.new(1, -20, 0, 30)
+		textButton4.Position = UDim2.fromOffset(10, arg)
+		textButton4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		textButton4.BackgroundTransparency = 0.92
+		textButton4.Text = ""
+		textButton4.AutoButtonColor = false
+		textButton4.ZIndex = 4
+		textButton4.Parent = frame
+		Instance.new("UICorner", textButton4).CornerRadius = UDim.new(0, 8)
+		local uiStroke3 = Instance.new("UIStroke", textButton4)
+		uiStroke3.Color = tbl7.stroke
+		uiStroke3.Transparency = 0.55
+		local frame4 = Instance.new("Frame")
+		frame4.Size = UDim2.fromOffset(20, 20)
+		frame4.Position = UDim2.fromOffset(8, 5)
+		frame4.BackgroundColor3 = Color3.fromRGB(32, 34, 44)
+		frame4.BorderSizePixel = 0
+		frame4.ZIndex = 5
+		frame4.Parent = textButton4
+		Instance.new("UICorner", frame4).CornerRadius = UDim.new(0, 5)
+		local uiStroke4 = Instance.new("UIStroke", frame4)
+		uiStroke4.Color = tbl7.muted
+		uiStroke4.Thickness = 1.4
+		uiStroke4.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		local textLabel6 = Instance.new("TextLabel")
+		textLabel6.Size = UDim2.fromScale(1, 1)
+		textLabel6.Position = UDim2.fromOffset(0, 0)
+		textLabel6.BackgroundTransparency = 1
+		textLabel6.Text = "✓"
+		textLabel6.TextColor3 = Color3.fromRGB(20, 30, 28)
+		textLabel6.Font = Enum.Font.GothamBlack
+		textLabel6.TextSize = 16
+		textLabel6.TextXAlignment = Enum.TextXAlignment.Center
+		textLabel6.TextYAlignment = Enum.TextYAlignment.Center
+		textLabel6.Visible = false
+		textLabel6.ZIndex = 6
+		textLabel6.Parent = frame4
+		local textLabel7 = Instance.new("TextLabel")
+		textLabel7.Size = UDim2.new(1, -36, 1, 0)
+		textLabel7.Position = UDim2.fromOffset(34, 0)
+		textLabel7.BackgroundTransparency = 1
+		textLabel7.Text = text
+		textLabel7.TextColor3 = tbl7.text
+		textLabel7.Font = Enum.Font.GothamSemibold
+		textLabel7.TextSize = 12
+		textLabel7.TextXAlignment = Enum.TextXAlignment.Left
+		textLabel7.ZIndex = 5
+		textLabel7.Parent = textButton4
+
+		return textButton4, function(arg2)
+			textLabel6.Visible = arg2 and true or false
+
+			if arg2 then
+				frame4.BackgroundColor3 = tbl7.green
+				uiStroke4.Color = Color3.fromRGB(180, 255, 210)
+				uiStroke4.Thickness = 1.6
+				textLabel7.TextColor3 = tbl7.green
+				textLabel6.TextTransparency = 0
+			else
+				frame4.BackgroundColor3 = Color3.fromRGB(32, 34, 44)
+				uiStroke4.Color = tbl7.muted
+				uiStroke4.Thickness = 1.4
+				textLabel7.TextColor3 = tbl7.text
+			end
+		end
+	end
+
+	flag4 = false
+	espRareEggs, v = fn15(126, "ESP Rare Eggs")
+
+	local function fn16(arg)
+		flag3 = arg
+
+		if arg then
+			textLabel4.Visible = true
+			frame3.BackgroundColor3 = tbl7.green
+			uiStroke2.Color = Color3.fromRGB(180, 255, 210)
+			textLabel5.TextColor3 = tbl7.green
+		else
+			textLabel4.Visible = false
+			frame3.BackgroundColor3 = Color3.fromRGB(32, 34, 44)
+			uiStroke2.Color = tbl7.muted
+			textLabel5.TextColor3 = tbl7.text
+		end
+	end
+
+	local textButton4 = Instance.new("TextButton")
+	textButton4.Size = UDim2.new(0.5, -12, 0, 34)
+	textButton4.Position = UDim2.fromOffset(10, 192)
+	textButton4.BackgroundColor3 = tbl7.green
+	textButton4.BackgroundTransparency = 0.28
+	textButton4.Text = "STEAL"
+	textButton4.TextColor3 = tbl7.text
+	textButton4.Font = Enum.Font.GothamBold
+	textButton4.TextSize = 14
+	textButton4.AutoButtonColor = false
+	textButton4.ZIndex = 4
+	textButton4.Parent = frame
+	Instance.new("UICorner", textButton4).CornerRadius = UDim.new(0, 8)
+	local textButton5 = Instance.new("TextButton")
+	textButton5.Size = UDim2.fromOffset(80, 24)
+	textButton5.Position = UDim2.new(0.5, -40, 0, 162)
+	textButton5.BackgroundColor3 = Color3.fromRGB(255, 170, 80)
+	textButton5.BackgroundTransparency = 0.25
+	textButton5.Text = "RESET"
+	textButton5.TextColor3 = tbl7.text
+	textButton5.Font = Enum.Font.GothamBold
+	textButton5.TextSize = 11
+	textButton5.AutoButtonColor = false
+	textButton5.ZIndex = 4
+	textButton5.Parent = frame
+	Instance.new("UICorner", textButton5).CornerRadius = UDim.new(0, 6)
+
+	textButton5.MouseButton1Click:Connect(function()
+		if not visible then
+			return
+		end
+
+		if activeThread then
+			pcall(function()
+				task.cancel(activeThread)
+			end)
+
+			activeThread = nil
+		end
+
+		n += 1
+		flag = false
+		tbl3.stealActive = false
+		tbl3.securingEgg = false
+		tbl3.teleporting = false
+		tbl3.isReturning = false
+		tbl3.godmode = false
+		tbl3.swapped = false
+		tbl3.holdingEggForGuard = false
+		tbl2.running = false
+		tbl4.uid = nil
+		tbl4.complete = false
+		tbl.active = false
+		pcall(fn9)
+		pcall(fn7)
+		pcall(fn6)
+		local character = localPlayer.Character
+
+		if character then
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+			if humanoid then
+				pcall(function()
+					humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+					humanoid.PlatformStand = false
+					humanoid.Sit = false
+				end)
+			end
+
+			for _, descendant in ipairs(character:GetDescendants()) do
+				if descendant:IsA("BasePart") then
+					pcall(function()
+						descendant.CanCollide = false
+						descendant.Anchored = false
+					end)
+				end
+			end
+
+			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+
+			if humanoidRootPart then
+				pcall(function()
+					humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position.X, humanoidRootPart.Position.Y - 80, humanoidRootPart.Position.Z)
+					humanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, -8000, 0)
+					humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+				end)
+
+				task.spawn(function()
+					local now = os.clock()
+
+					while os.clock() - now < 3 do
+						local humanoidRootPart2 = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+						if humanoidRootPart2 then
+							pcall(function()
+								humanoidRootPart2.AssemblyLinearVelocity = Vector3.new(0, -8000, 0)
+								humanoidRootPart2.CanCollide = false
+								humanoidRootPart2.Anchored = false
+							end)
+
+							RunService.Heartbeat:Wait()
+							continue
+						end
+
+						break
+					end
+				end)
+			end
+		end
+
+		closeListPanel()
+		fn3("LongHiHi Hub", "Reset!")
+	end)
+
+	local textButton6 = Instance.new("TextButton")
+	textButton6.Size = UDim2.new(0.5, -12, 0, 34)
+	textButton6.Position = UDim2.new(0.5, 2, 0, 192)
+	textButton6.BackgroundColor3 = tbl7.red
+	textButton6.BackgroundTransparency = 0.32
+	textButton6.Text = "STOP"
+	textButton6.TextColor3 = tbl7.text
+	textButton6.Font = Enum.Font.GothamBold
+	textButton6.TextSize = 14
+	textButton6.AutoButtonColor = false
+	textButton6.ZIndex = 4
+	textButton6.Parent = frame
+	Instance.new("UICorner", textButton6).CornerRadius = UDim.new(0, 8)
+	local frame4 = Instance.new("Frame")
+	frame4.Name = fn13(8)
+	frame4.BackgroundTransparency = 1
+	frame4.Size = UDim2.fromOffset(276, 0)
+	frame4.Visible = false
+	frame4.ZIndex = 100
+	frame4.Parent = screenGui
+	local frame5 = Instance.new("Frame")
+	frame5.Size = UDim2.fromScale(1, 0.55)
+	frame5.BackgroundColor3 = tbl7.panel
+	frame5.BackgroundTransparency = 0.1
+	frame5.BorderSizePixel = 0
+	frame5.ClipsDescendants = true
+	frame5.ZIndex = 101
+	frame5.Parent = frame4
+	Instance.new("UICorner", frame5).CornerRadius = UDim.new(0, 10)
+	local uiStroke3 = Instance.new("UIStroke", frame5)
+	uiStroke3.Color = tbl7.stroke
+	uiStroke3.Transparency = 0.55
+	local scrollingFrame = Instance.new("ScrollingFrame")
+	scrollingFrame.Size = UDim2.new(1, -8, 1, -10)
+	scrollingFrame.Position = UDim2.fromOffset(4, 5)
+	scrollingFrame.BackgroundTransparency = 1
+	scrollingFrame.BorderSizePixel = 0
+	scrollingFrame.ScrollBarThickness = 3
+	scrollingFrame.ScrollBarImageTransparency = 0.85
+	scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollingFrame.ZIndex = 102
+	scrollingFrame.Parent = frame5
+	local uiListLayout = Instance.new("UIListLayout", scrollingFrame)
+	uiListLayout.Padding = UDim.new(0, 3)
+	uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	local uiPadding = Instance.new("UIPadding", scrollingFrame)
+	uiPadding.PaddingTop = UDim.new(0, 2)
+	uiPadding.PaddingBottom = UDim.new(0, 4)
+
+	local tbl8 = {
+		Divine = Color3.fromRGB(255, 215, 0),
+		Eternal = Color3.fromRGB(230, 120, 255),
+		Secret = Color3.fromRGB(255, 80, 80),
+		Cosmic = Color3.fromRGB(80, 160, 255),
+		Mythic = Color3.fromRGB(255, 100, 220),
+		Legendary = Color3.fromRGB(255, 170, 0),
+		Epic = Color3.fromRGB(180, 80, 255),
+		Rare = Color3.fromRGB(80, 200, 255),
+		Uncommon = Color3.fromRGB(120, 220, 120),
+		Common = Color3.fromRGB(180, 180, 180),
+	}
+
+	local function fn17()
+		local absolutePosition = textButton2.AbsolutePosition
+		local absoluteSize = textButton2.AbsoluteSize
+		local n2 = math.max(frame4.AbsoluteSize.Y, 200)
+		local n3 = 0
+
+		if currentCamera.ViewportSize.Y - absolutePosition.Y < n2 - 5 then
+			n3 = n2 - 5 - currentCamera.ViewportSize.Y - absolutePosition.Y + 40
+		end
+
+		frame4.Position = UDim2.fromOffset(absolutePosition.X - 4, absolutePosition.Y + absoluteSize.Y + 6 - n3)
+	end
+
+	local function fn18()
+		fn17()
+		frame4.Visible = true
+		flag2 = true
+		frame5.Size = UDim2.fromScale(1, 0.55)
+		TweenService:Create(frame5, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.fromScale(1, 1) }):Play()
+		TweenService:Create(imageLabel, TweenInfo.new(0.18), { Rotation = 180 }):Play()
+	end
+
+	local fn19 = nil
+
+	fn19 = function()
+		if not flag2 and not frame4.Visible then
+			return
+		end
+		flag2 = false
+		TweenService:Create(imageLabel, TweenInfo.new(0.18), { Rotation = 0 }):Play()
+		local tween = TweenService:Create(frame5, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.In), { Size = UDim2.fromScale(1, 0.55) })
+		tween:Play()
+
+		tween.Completed:Connect(function()
+			if not flag2 then
+				frame4.Visible = false
+			end
+		end)
+
+		UserInputService.InputBegan:Connect(function(input)
+			if not flag2 then
+				return
+			end
+
+			if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then
+				return
+			end
+
+			task.defer(function()
+				if not flag2 then
+					return
+				end
+				local position = input.Position
+
+				local function fn20(arg)
+					if not arg or not arg.Visible then
+						return false
+					end
+					local absolutePosition = arg.AbsolutePosition
+					local absoluteSize = arg.AbsoluteSize
+					return position.X >= absolutePosition.X and position.X <= absolutePosition.X + absoluteSize.X and position.Y >= absolutePosition.Y and position.Y <= absolutePosition.Y + absoluteSize.Y
+				end
+
+				if fn20(frame4) or fn20(frame5) or fn20(textButton2) then
+					return
+				end
+				fn19()
+			end)
+		end)
+	end
+
+	local flag5 = false
+	local position = nil
+	local position2 = nil
+
+	frame2.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag5 = true
+			position = input.Position
+			position2 = frame.Position
+		end
+	end)
+
+	frame2.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			flag5 = false
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if flag5 and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local n2 = input.Position - position
+			frame.Position = UDim2.new(position2.X.Scale, position2.X.Offset + n2.X, position2.Y.Scale, position2.Y.Offset + n2.Y)
+
+			if flag2 then
+				fn17()
+			end
+		end
+	end)
+
+	local function fn20(arg)
+		for _, child in ipairs(scrollingFrame:GetChildren()) do
+			if child:IsA("TextButton") or child:IsA("Frame") then
+				child:Destroy()
+			end
+		end
+
+		local n2 = math.min(#arg, 40)
+		local v2 = fn2()
+
+		for i = 1, n2 do
+			local v3 = arg[i]
+			local position3 = v3.record and v3.record.BoundsCFrame and v3.record.BoundsCFrame.Position
+			local n3 = v2 and position3 and math.floor((v2.Position - position3).Magnitude) or 0
+			local textButton7 = Instance.new("TextButton")
+			textButton7.Size = UDim2.new(1, -4, 0, 52)
+			textButton7.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			textButton7.BackgroundTransparency = 1
+			textButton7.Text = ""
+			textButton7.AutoButtonColor = false
+			textButton7.LayoutOrder = i
+			textButton7.ZIndex = 103
+			textButton7.Parent = scrollingFrame
+			Instance.new("UICorner", textButton7).CornerRadius = UDim.new(0, 7)
+			local frame6 = Instance.new("Frame")
+			frame6.Size = UDim2.fromOffset(40, 40)
+			frame6.Position = UDim2.fromOffset(6, 6)
+			frame6.BackgroundColor3 = Color3.fromRGB(16, 18, 26)
+			frame6.BackgroundTransparency = 0.2
+			frame6.BorderSizePixel = 0
+			frame6.ZIndex = 104
+			frame6.Parent = textButton7
+			Instance.new("UICorner", frame6).CornerRadius = UDim.new(0, 6)
+			local imageLabel2 = Instance.new("ImageLabel")
+			imageLabel2.Size = UDim2.new(1, -4, 1, -4)
+			imageLabel2.Position = UDim2.fromOffset(2, 2)
+			imageLabel2.BackgroundTransparency = 1
+			imageLabel2.Image = v3.icon and v3.icon ~= "" and v3.icon or ""
+			imageLabel2.ScaleType = Enum.ScaleType.Fit
+			imageLabel2.ZIndex = 105
+			imageLabel2.Parent = frame6
+			local textLabel6 = Instance.new("TextLabel")
+			textLabel6.Size = UDim2.new(1, -120, 0, 16)
+			textLabel6.Position = UDim2.fromOffset(52, 5)
+			textLabel6.BackgroundTransparency = 1
+			textLabel6.Text = tostring(v3.name)
+			textLabel6.TextColor3 = tbl7.text
+			textLabel6.Font = Enum.Font.GothamSemibold
+			textLabel6.TextSize = 12
+			textLabel6.TextXAlignment = Enum.TextXAlignment.Left
+			textLabel6.TextTruncate = Enum.TextTruncate.AtEnd
+			textLabel6.ZIndex = 104
+			textLabel6.Parent = textButton7
+			local textLabel7 = Instance.new("TextLabel")
+			textLabel7.Size = UDim2.new(0, 80, 0, 12)
+			textLabel7.Position = UDim2.fromOffset(52, 24)
+			textLabel7.BackgroundTransparency = 1
+			textLabel7.Text = tostring(v3.rarity or "?")
+			textLabel7.TextColor3 = tbl8[v3.rarity] or tbl7.muted
+			textLabel7.Font = Enum.Font.GothamBold
+			textLabel7.TextSize = 10
+			textLabel7.TextXAlignment = Enum.TextXAlignment.Left
+			textLabel7.ZIndex = 104
+			textLabel7.Parent = textButton7
+			local textLabel8 = Instance.new("TextLabel")
+			textLabel8.Size = UDim2.new(1, -140, 0, 11)
+			textLabel8.Position = UDim2.fromOffset(130, 25)
+			textLabel8.BackgroundTransparency = 1
+			textLabel8.Text = tostring(v3.record and (v3.record.AreaId or v3.record.Area) or "?") .. " · " .. n3 .. "m"
+			textLabel8.TextColor3 = tbl7.muted
+			textLabel8.Font = Enum.Font.Gotham
+			textLabel8.TextSize = 9
+			textLabel8.TextXAlignment = Enum.TextXAlignment.Left
+			textLabel8.ZIndex = 104
+			textLabel8.Parent = textButton7
+			local textLabel9 = Instance.new("TextLabel")
+			textLabel9.Size = UDim2.new(0, 72, 0, 18)
+			textLabel9.Position = UDim2.new(1, -76, 0, 6)
+			textLabel9.BackgroundTransparency = 1
+			textLabel9.Text = "$" .. fn4(v3.money or 0) .. "/s"
+			textLabel9.TextColor3 = tbl7.gold
+			textLabel9.Font = Enum.Font.GothamBold
+			textLabel9.TextSize = 11
+			textLabel9.TextXAlignment = Enum.TextXAlignment.Right
+			textLabel9.ZIndex = 104
+			textLabel9.Parent = textButton7
+
+			textButton7.MouseEnter:Connect(function()
+				textButton7.BackgroundTransparency = 0.9
+			end)
+
+			textButton7.MouseLeave:Connect(function()
+				textButton7.BackgroundTransparency = 1
+			end)
+
+			textButton7.MouseButton1Click:Connect(function()
+				uid = v3.uid
+				textLabel3.Text = tostring(v3.name) .. "  ·  $" .. fn4(v3.money) .. "/s"
+				fn14("Selected · " .. tostring(v3.name))
+				fn19()
+			end)
+		end
+
+		local n3 = n2 * 55 + 10
+		scrollingFrame.CanvasSize = UDim2.fromOffset(0, n3)
+		frame4.Size = UDim2.fromOffset(276, math.clamp(n3 + 12, 80, 340))
+		fn17()
+	end
+
+	local n2 = 0
+
+	local function fn21(arg)
+		if not arg and os.clock() - n2 < 1 then
+			return tbl6, #(tbl6 or {})
+		end
+		n2 = os.clock()
+		return fn12()
+	end
+
+	textButton.MouseButton1Click:Connect(function()
+		visible = not visible
+		frame.Visible = visible
+
+		if not visible then
+			fn19()
+		end
+
+		textButton.Text = visible and "ON" or "OFF"
+		textButton.TextColor3 = visible and tbl7.green or tbl7.red
+	end)
+
+	textButton2.MouseButton1Click:Connect(function()
+		if not visible then
+			return
+		end
+
+		if flag2 then
+			task.spawn(function()
+				local v2, v3 = fn21(true)
+
+				if v2 and #v2 > 0 then
+					fn20(v2)
+					fn14(string.format("%d eggs", v3 or #v2))
+				end
+			end)
+
+			return
+		end
+
+		fn14("Scanning...")
+
+		task.spawn(function()
+			local v2, v3 = fn21(true)
+			if not v2 or #v2 == 0 then
+				fn14("No eggs")
+				return
+			end
+			fn20(v2)
+
+			if v2[1] then
+				uid = v2[1].uid
+				textLabel3.Text = tostring(v2[1].name) .. "  ·  $" .. fn4(v2[1].money) .. "/s"
+				pcall(fn14, "Auto · " .. tostring(v2[1].name))
+			end
+
+			fn18()
+			fn14(string.format("%d eggs · BEST auto-selected", v3 or #v2))
+		end)
+	end)
+
+	local thread = nil
+
+	local tbl9 = {
+		droneFollow = false,
+		droneTarget = nil,
+		droneScanAt = 0,
+		droneSwingAt = 0,
+		droneProgressAt = 0,
+		droneLastHp = nil,
+		droneSkipUntil = {},
+		droneGuardReached = false,
+		droneAt = 0,
+	}
+
+	local function fn22(arg)
+		if not arg or not arg.Parent then
+			return nil
+		end
+
+		if arg:IsA("BasePart") then
+			return arg.Position
+		end
+
+		if arg:IsA("Model") then
+			local ok, result = pcall(function()
+				return arg:GetPivot()
+			end)
+
+			if ok and result then
+				return result.Position
+			end
+			local primaryPart = arg.PrimaryPart or arg:FindFirstChildWhichIsA("BasePart")
+			if primaryPart then
+				return primaryPart.Position
+			end
+		end
+
+		return nil
+	end
+
+	local function fn23(arg)
+		if not arg then
+			return nil, nil
+		end
+		local humanoid = arg:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			return humanoid.Health, humanoid.MaxHealth
+		end
+		local num = nil
+		local num2 = nil
+
+		for _, descendant in ipairs(arg:GetDescendants()) do
+			if descendant:IsA("Humanoid") then
+				return descendant.Health, descendant.MaxHealth
+			end
+
+			if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
+				local match, v2 = tostring(descendant.Text):match("(%d+)%s*/%s*(%d+)")
+
+				if match and v2 then
+					num = num or tonumber(match)
+					num2 = num2 or tonumber(v2)
+				end
+			end
+
+			if num and num2 then
+				break
+			end
+		end
+
+		return num, num2
+	end
+
+	local function fn24(arg, arg2)
+		if not arg or not arg.Parent then
+			return false
+		end
+
+		if arg2 and not arg:IsDescendantOf(arg2) then
+			return false
+		end
+		local v2 = fn23(arg)
+		return (v2 == nil or v2 > 0) and fn22(arg) ~= nil
+	end
+
+	local function fn25(arg)
+		local v2, v3 = fn23(arg)
+		if v2 and v2 <= 0 then
+			return math.huge
+		end
+
+		if v3 == 10 then
+			return v2 == 10 and 0 or 3
+		end
+
+		if v3 == 5 then
+			return v2 == 5 and 1 or 4
+		end
+
+		if v3 == 3 then
+			return v2 == 3 and 2 or 5
+		end
+		return 6
+	end
+
+	local function fn26(arg, arg2, arg3, arg4)
+		local n3 = arg2 - arg.Position
+		if n3.Magnitude < 4 then
+			return true
+		end
+		local n4 = arg.Position + n3.Unit * math.min(n3.Magnitude, math.clamp(tonumber(arg4) or 767, 90, 850) * math.min(arg3, 0.15))
+		local vector = Vector3.new(arg2.X - n4.X, 0, arg2.Z - n4.Z)
+
+		if vector.Magnitude < 0.01 then
+			vector = arg.CFrame.LookVector
+		end
+
+		arg.CFrame = CFrame.lookAt(n4, n4 + vector)
+		arg.AssemblyLinearVelocity = Vector3.zero
+		pcall(fn5, n4)
+		return false
+	end
+
+	local function fn27(arg)
+		pcall(function()
+			if arg then
+				localPlayer:RequestStreamAroundAsync(arg)
+			end
+		end)
+	end
+
+	local function fn28()
+		local character = localPlayer.Character
+		if not character then
+			return
+		end
+		local tool = character:FindFirstChildWhichIsA("Tool")
+		local flag6 = tool and tool:GetAttribute("IsBat") ~= true
+
+		if flag6 then
+			flag6 = not tostring(tool.Name):lower():find("bat")
+		end
+
+		if flag6 then
+			tool = nil
+		end
+
+		if not tool then
+			local backpack = localPlayer:FindFirstChild("Backpack")
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+			if backpack and humanoid then
+				for _, child in ipairs(backpack:GetChildren()) do
+					if child:IsA("Tool") and (child:GetAttribute("IsBat") == true or child.Name:lower():find("bat")) then
+						humanoid:EquipTool(child)
+						tool = child
+						break
+					end
+				end
+			end
+		end
+
+		if tool then
+			pcall(function()
+				tool:Activate()
+			end)
+		end
+	end
+
+	local tbl10 = { "abyss", "ocean", "deepsea", "deep ocean", "abyssocean", "oceanabyss" }
+
+	local function fn29(arg)
+		local str = tostring(arg or ""):lower()
+
+		for _, v2 in ipairs(tbl10) do
+			if str:find(v2, 1, true) then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function fn30()
+		local tbl11 = {}
+		local fn31 = nil
+
+		fn31 = function(arg)
+			if not arg then
+				return nil
+			end
+
+			for _, child in ipairs(arg:GetChildren()) do
+				if tbl11[child] then
+					continue
+				end
+				tbl11[child] = true
+				if (child:IsA("Folder") or child:IsA("Model")) and fn29(child.Name) then
+					return child
+				end
+
+				if child:IsA("Folder") or child:IsA("Model") or child:IsA("Workspace") then
+					local v2 = fn31(child)
+					if v2 then
+						return v2
+					end
+				end
+			end
+
+			return nil
+		end
+
+		local objects = Workspace:FindFirstChild("__OBJECTS")
+
+		if objects then
+			local areas = objects:FindFirstChild("Areas")
+			areas = areas and fn31(areas)
+			if areas then
+				return areas
+			end
+			local v2 = fn31(objects)
+			if v2 then
+				return v2
+			end
+		end
+
+		return (fn31(Workspace))
+	end
+
+	local function fn31()
+		local v2 = fn30()
+		if not v2 then
+			return nil
+		end
+		local basePart = v2:FindFirstChildWhichIsA("BasePart", true)
+		if basePart then
+			return basePart.Position
+		end
+
+		local ok, result = pcall(function()
+			return v2:GetPivot()
+		end)
+
+		if ok and result then
+			return result.Position
+		end
+		return nil
+	end
+
+	local function fn32()
+		local v2 = fn30()
+		if not v2 then
+			return nil
+		end
+		local scrambleLocalVisuals = v2:FindFirstChild("ScrambleLocalVisuals", true) or v2:FindFirstChild("LocalVisuals", true) or v2:FindFirstChild("Visuals", true) or v2:FindFirstChild("EventVisuals", true)
+		if scrambleLocalVisuals then
+			return scrambleLocalVisuals
+		end
+
+		for _, child in ipairs(v2:GetChildren()) do
+			if child:IsA("Model") then
+				return v2
+			end
+		end
+
+		return nil
+	end
+
+	local tbl11 = { at = 0, anchor = nil, visuals = nil }
+
+	local function fn33()
+		local now = os.clock()
+		if now - tbl11.at < 1.5 and tbl11.anchor then
+			return tbl11.anchor, tbl11.visuals
+		end
+		tbl11.at = now
+		tbl11.anchor = fn31()
+		tbl11.visuals = fn32()
+		return tbl11.anchor, tbl11.visuals
+	end
+
+	local function fn34()
+		local scrambleLocalVisuals = Workspace:FindFirstChild("ScrambleLocalVisuals")
+		if scrambleLocalVisuals then
+			return scrambleLocalVisuals
+		end
+		local v2
+		v2, v2 = fn33()
+		return v2
+	end
+
+	local function fn35()
+		local v2 = fn34()
+		if not v2 then
+			return 0
+		end
+		local n3 = 0
+
+		for _, descendant in ipairs(v2:GetDescendants()) do
+			if descendant:IsA("Model") and fn24(descendant, v2) then
+				n3 += 1
+			end
+		end
+
+		return n3
+	end
+
+	local function fn36(arg)
+		if not flag3 or lhhInst2.dead then
+			return
+		end
+
+		if flag or tbl2.running or tbl3.securingEgg then
+			return
+		end
+		local v2 = fn2()
+		if not v2 then
+			return
+		end
+		local v3 = fn34()
+
+		if not v3 then
+			local v4, v5 = fn33()
+			if not (v4 and v5) then
+				return "Event Not Found"
+			end
+
+			if (v2.Position - v4).Magnitude > 120 then
+				fn26(v2, v4 + Vector3.new(0, 4, 0), arg, 767)
+				return "Flying to Abyss Ocean"
+			end
+			v3 = v5
+		end
+
+		local droneTarget = tbl9.droneTarget
+
+		if not fn24(droneTarget, v3) then
+			tbl9.droneTarget = nil
+			droneTarget = nil
+		end
+
+		local now = os.clock()
+		local flag6 = droneTarget and fn22(droneTarget) or nil
+		flag6 = flag6 and (v2.Position - flag6).Magnitude <= 7
+
+		if flag6 then
+			flag6 = now - (tbl9.droneProgressAt or 0) > 19
+		end
+
+		if flag6 then
+			tbl9.droneSkipUntil[droneTarget] = now + 12
+			tbl9.droneTarget = nil
+			droneTarget = nil
+		end
+
+		local flag7 = not droneTarget
+
+		if flag7 then
+			flag7 = now - (tbl9.droneScanAt or 0) >= 0.28
+		end
+
+		if flag7 then
+			tbl9.droneScanAt = now
+			local huge = math.huge
+			local huge2 = math.huge
+
+			for _, descendant in ipairs(v3:GetDescendants()) do
+				local isModel = descendant:IsA("Model") and fn24(descendant, v3)
+
+				if isModel then
+					isModel = (tbl9.droneSkipUntil[descendant] or 0) <= now
+				end
+
+				if isModel then
+					local v4 = fn25(descendant)
+					local v5 = fn22(descendant)
+
+					if v5 then
+						local magnitude = (v2.Position - v5).Magnitude
+
+						if v4 < huge or v4 == huge and magnitude < huge2 then
+							huge = v4
+							huge2 = magnitude
+							droneTarget = descendant
+						end
+					end
+				end
+			end
+
+			tbl9.droneTarget = droneTarget
+			tbl9.droneLastHp = droneTarget and select(1, fn23(droneTarget)) or nil
+			tbl9.droneProgressAt = now
+
+			if droneTarget then
+				fn27(fn22(droneTarget))
+			end
+		end
+
+		if not droneTarget then
+			return "Event Not Found"
+		end
+		local v4 = fn22(droneTarget)
+		if not v4 then
+			tbl9.droneTarget = nil
+			return
+		end
+
+		if (v4 - v2.Position).Magnitude > 300 then
+			fn27(v4)
+		end
+
+		local droneLastHp = select(1, fn23(droneTarget))
+
+		if droneLastHp ~= tbl9.droneLastHp then
+			tbl9.droneLastHp = droneLastHp
+			tbl9.droneProgressAt = now
+		end
+
+		local n3 = v4 - v2.Position
+
+		if n3.Magnitude > 5 then
+			fn26(v2, v4 - n3.Unit * 4, arg, 767)
+		elseif now - (tbl9.droneSwingAt or 0) > 0.38 then
+			tbl9.droneSwingAt = now
+			fn28()
+
+			pcall(function()
+				local networking = ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("Networking")
+				networking = networking and networking:FindFirstChild("RE/RigSync/ProbeSatchel", true)
+
+				if networking and localPlayer.Character then
+					networking:FireServer(localPlayer.Character, 901)
+				end
+			end)
+		end
+	end
+
+	local thread2 = nil
+
+	local function fn37()
+		if thread2 then
+			return
+		end
+		flag3 = true
+
+		thread2 = task.spawn(function()
+			local n3 = 0
+
+			while flag3 and not lhhInst2.dead do
+				local result = RunService.Heartbeat:Wait()
+
+				if os.clock() - (tbl9.droneAt or 0) >= 0.1 then
+					tbl9.droneAt = os.clock()
+					local v2 = fn36(math.max(result, 0.1))
+
+					if v2 == "Event Not Found" then
+						if os.clock() - n3 > 6 then
+							n3 = os.clock()
+							fn3("LongHiHi Hub", "Event Not Found")
+						end
+					elseif v2 == "Flying to Abyss Ocean" then
+						if os.clock() - (tbl9._abyssNotify or 0) > 8 then
+							tbl9._abyssNotify = os.clock()
+							fn3("LongHiHi Hub", "Event chưa mở · đang bay tới Abyss Ocean")
+						end
+					end
+				end
+			end
+
+			thread2 = nil
+			tbl9.droneTarget = nil
+			pcall(fn7)
+			pcall(fn6)
+		end)
+	end
+
+	local function fn38()
+		flag3 = false
+		thread2 = nil
+		tbl9.droneTarget = nil
+		tbl11.at = 0
+		tbl11.anchor = nil
+		tbl11.visuals = nil
+	end
+
+	local tbl12 = { enabled = false, running = false, promptConn = nil }
+
+	local function fn39()
+		if tbl12.running or not tbl12.enabled then
+			return
+		end
+
+		if type(fn8) == "function" then
+			tbl12.running = true
+			pcall(fn8)
+			tbl12.running = false
+
+			task.defer(function()
+				task.wait(0.15)
+				pcall(fn7)
+			end)
+		end
+	end
+
+	local function fn40(arg)
+		tbl12.enabled = arg == true
+
+		if tbl12.enabled then
+			if not tbl12.promptConn then
+				tbl12.promptConn = fn(game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, player)
+					if player ~= localPlayer then
+						return
+					end
+					local str = tostring(prompt and prompt.Name or prompt or "")
+
+					if str == "CarryAreaEgg" or str:find("Egg") or str:find("Carry") or str:find("FieldEgg") then
+						task.spawn(fn39)
+					end
+				end))
+			end
+		elseif tbl12.promptConn then
+			pcall(function()
+				tbl12.promptConn:Disconnect()
+			end)
+
+			tbl12.promptConn = nil
+		end
+	end
+
+	fn40(true)
+
+	local tbl13 = {
+		Rare = true,
+		Epic = true,
+		Legendary = true,
+		Mythic = true,
+		Rainbow = true,
+		Secret = true,
+		Cosmic = true,
+		Divine = true,
+		Eternal = true,
+	}
+
+	local v2 = nil
+	local thread3 = nil
+
+	local function fn41()
+		if v2 then
+			pcall(function()
+				v2:Destroy()
+			end)
+
+			v2 = nil
+		end
+	end
+
+	local function createFolder()
+		if v2 and v2.Parent then
+			return v2
+		end
+		local folder = Instance.new("Folder")
+		folder.Name = "LHH_ESP"
+		folder.Parent = Workspace.CurrentCamera or Workspace
+		v2 = folder
+		return folder
+	end
+
+	local function fn42(arg)
+		local str = tostring(arg or "")
+		if tbl13[str] then
+			return true
+		end
+		local str2 = str:upper()
+
+		for k in pairs(tbl13) do
+			if str2:find(k:upper(), 1, true) then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function fn43()
+		fn41()
+		if not flag4 then
+			return
+		end
+		local v3 = createFolder()
+		local value = tbl6
+		local flag6 = not value
+
+		if flag6 or #value == 0 then
+			pcall(function()
+				value = select(1, fn12())
+			end)
+		end
+
+		if flag6 then
+			return
+		end
+
+		for _, v4 in ipairs(value) do
+			if v4 and fn42(v4.rarity) and v4.record then
+				local physicalModel = v4.record.PhysicalModel
+				local boundsCFrame = v4.record.BoundsCFrame or v4.record.CFrame
+				local parent = physicalModel and physicalModel.Parent
+				local primaryPart = nil
+
+				if parent then
+					primaryPart = physicalModel.PrimaryPart or physicalModel:FindFirstChildWhichIsA("BasePart")
+				end
+
+				if not primaryPart and boundsCFrame then
+					primaryPart = Instance.new("Part")
+					primaryPart.Anchored = true
+					primaryPart.CanCollide = false
+					primaryPart.CanQuery = false
+					primaryPart.Transparency = 1
+					primaryPart.Size = Vector3.new(2, 2, 2)
+					primaryPart.CFrame = typeof(boundsCFrame) == "CFrame" and boundsCFrame or CFrame.new(boundsCFrame)
+					primaryPart.Parent = v3
+				end
+
+				if primaryPart then
+					local highlight = Instance.new("Highlight")
+					highlight.Adornee = physicalModel and physicalModel.Parent and physicalModel or primaryPart
+					highlight.FillColor = Color3.fromRGB(255, 80, 120)
+					highlight.OutlineColor = Color3.fromRGB(255, 220, 100)
+					highlight.FillTransparency = 0.5
+					highlight.OutlineTransparency = 0.05
+					highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+					highlight.Parent = v3
+					local billboardGui = Instance.new("BillboardGui")
+					billboardGui.Size = UDim2.fromOffset(130, 40)
+					billboardGui.AlwaysOnTop = true
+					billboardGui.StudsOffset = Vector3.new(0, 3.2, 0)
+					billboardGui.Adornee = primaryPart
+					billboardGui.Parent = v3
+					local textLabel6 = Instance.new("TextLabel")
+					textLabel6.Size = UDim2.fromScale(1, 1)
+					textLabel6.BackgroundTransparency = 1
+					textLabel6.Text = string.format("%s\n%s · $%s/s", tostring(v4.name), tostring(v4.rarity), fn4(v4.money or 0))
+					textLabel6.TextColor3 = Color3.fromRGB(255, 230, 120)
+					textLabel6.Font = Enum.Font.GothamBold
+					textLabel6.TextSize = 11
+					textLabel6.TextStrokeTransparency = 0.35
+					textLabel6.Parent = billboardGui
+				end
+			end
+		end
+	end
+
+	local function fn44(arg)
+		flag4 = arg == true
+
+		if flag4 then
+			fn43()
+
+			if not thread3 then
+				thread3 = task.spawn(function()
+					while flag4 and not lhhInst2.dead do
+						task.wait(3)
+
+						if flag4 then
+							pcall(fn43)
+						end
+					end
+
+					thread3 = nil
+				end)
+			end
+		else
+			fn41()
+		end
+	end
+
+	espRareEggs.MouseButton1Click:Connect(function()
+		if not visible then
+			return
+		end
+		flag4 = not flag4
+		v(flag4)
+		fn44(flag4)
+		fn3("LongHiHi Hub", flag4 and "ESP Rare Eggs ON" or "ESP Rare Eggs OFF")
+	end)
+
+	textButton3.MouseButton1Click:Connect(function()
+		if not visible then
+			return
+		end
+
+		if flag3 then
+			fn38()
+			fn16(false)
+		else
+			local n3 = 0
+
+			pcall(function()
+				n3 = fn35()
+			end)
+
+			if n3 <= 0 then
+				local v3, v4 = fn33()
+
+				if v3 and v4 then
+					local n4 = 0
+
+					for _, descendant in ipairs(v4:GetDescendants()) do
+						if descendant:IsA("Model") and fn24(descendant, v4) then
+							n4 += 1
+						end
+					end
+
+					if n4 > 0 then
+						fn3("LongHiHi Hub", "Event In Abyss Ocean · Start Checking")
+					else
+						fn3("LongHiHi Hub", "Event chưa mở · sẽ dò Abyss Ocean")
+					end
+				else
+					fn3("LongHiHi Hub", "Event Not Found")
+				end
+			end
+
+			fn16(true)
+			fn37()
+		end
+	end)
+
+	textButton4.MouseButton1Click:Connect(function()
+		if not visible then
+			return
+		end
+
+		if flag or tbl2.running then
+			fn14("Busy...")
+			return
+		end
+
+		if thread then
+			pcall(function()
+				task.cancel(thread)
+			end)
+
+			thread = nil
+		end
+
+		thread = task.spawn(function()
+			local ok, result = pcall(function()
+				pcall(fn9)
+				local v3 = fn21(true)
+				local v4 = nil
+
+				if uid then
+					v4 = nil
+
+					for _, v5 in ipairs(tbl6) do
+						if tostring(v5.uid) == tostring(uid) then
+							v4 = v5
+							break
+						else
+							v4 = nil
+						end
+					end
+				end
+
+				v4 = v4 or v3 and v3[1]
+				if not v4 or not v4.record then
+					fn14("No target")
+					return
+				end
+				fn19()
+				fn14("Stealing · " .. tostring(v4.name))
+				local v5, str = fn11(v4.record, fn14)
+
+				if v5 then
+					tbl5[tostring(v4.uid)] = true
+					uid = nil
+					textLabel3.Text = "Select Egg (BEST)"
+					local v6 = fn14
+					local v7 = tostring
+					str = str or "ok"
+					v6("Done · " .. v7(str))
+					fn3("LongHiHi Hub", "Stolen: " .. tostring(v4.name))
+				else
+					fn14("Fail · " .. tostring(str))
+				end
+			end)
+
+			if not ok then
+				fn14("Error · F9")
+				warn("[LHH] ", result)
+			end
+
+			thread = nil
+		end)
+	end)
+
+	textButton6.MouseButton1Click:Connect(function()
+		if thread then
+			pcall(function()
+				task.cancel(thread)
+			end)
+
+			thread = nil
+		end
+
+		n += 1
+		flag = false
+		tbl3.stealActive = false
+		tbl3.securingEgg = false
+		tbl3.teleporting = false
+		tbl3.isReturning = false
+		tbl2.running = false
+		tbl4.uid = nil
+		pcall(fn7)
+
+		if not flag4 then
+			pcall(fn41)
+		end
+
+		fn19()
+		fn14("Stopped")
+	end)
+
+	lhhInst2.refreshLoopTask = task.spawn(function()
+		while not lhhInst2.dead do
+			task.wait(5)
+
+			if not lhhInst2.dead then
+				if visible and flag2 and not flag then
+					local v3 = fn21(true)
+
+					if v3 then
+						fn20(v3)
+					end
+				end
+
+				continue
+			end
+
+			break
+		end
+	end)
+
+	lhhInst2.treadmillLoopTask = task.spawn(function()
+		while not lhhInst2.dead do
+			task.wait(0.5)
+			if not lhhInst2.dead then
+				pcall(fn10)
+				continue
+			end
+			break
+		end
+	end)
+
+	task.spawn(function()
+		task.wait(2)
+		if lhhInst2.dead then
+			return
+		end
+		local ok, result = pcall(fn21, true)
+
+		if ok and result and result[1] then
+			uid = result[1].uid
+			textLabel3.Text = tostring(result[1].name) .. "  ·  $" .. fn4(result[1].money) .. "/s"
+			fn14(string.format("Ready · BEST: %s", tostring(result[1].name)))
+		else
+			fn14("Ready")
+		end
+	end)
+end
