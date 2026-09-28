@@ -1,4 +1,4 @@
-local fn, v, v2, defaultTab, Players, RunService, ReplicatedStorage, CoreGui, UserInputService, localPlayer
+local fn, v, v2, defaultTab, Players, RunService, ReplicatedStorageeplicatedStorage, CoreGui, UserInputService, localPlayer
 local networking, fn2, tbl, v3, fn3, fn4, tbl2, fn5, fn6, tbl3
 local tbl4, fn7, tbl5, v4, v5, espSection, tbl6, color, sequence, palettes
 local sheen
@@ -370,7 +370,7 @@ do
 					end
 				end
 
-				if type(arg2.Legacy) == "string" and type(arg2.SectionName) == "string" then
+				if type(arg2.LReplicatedStorage" and type(arg2.SectionName) == "string" then
 					table.insert(tbl2, { Handle = v8, Name = arg2.Name, Legacy = arg2.Legacy, Section = arg2.SectionName, StepOf = fn12 })
 				end
 
@@ -2624,13 +2624,13 @@ do
 			Name = "Carry Speed",
 			Note = "Lower it if you get Delivery failed",
 			Min = 80,
-			Max = 120,
+			Max = 1000,
 			Default = 100,
 			Increment = 1,
 			Unit = "%",
 			SubOf = tbl4.SafeCarry.Handle,
 			Callback = function(arg)
-				tbl4.SafeCarry.CarryScale = math.clamp(tonumber(arg) or 100, 80, 120) / 100
+				tbl4.SafeCarry.CarryScale = math.clamp(tonumber(arg) or 100, 80, 1000) / end
 			end,
 		})
 
@@ -2639,12 +2639,12 @@ do
 			Note = "Tween only: how fast you fly to the egg, 100 = your walk speed",
 			Min = 50,
 			Max = 300,
-			Default = 115,
+			Default = 300,
 			Increment = 5,
 			Unit = "%",
 			SubOf = tbl4.SafeCarry.Handle,
 			Callback = function(arg)
-				tbl4.SafeCarry.RunSpeed = math.clamp(tonumber(arg) or 115, 50, 300) / 100
+				tbl4.SafeCarry.RunSpeed = math.clamp(tonumber(arg) or 115, 50, 300) / 300
 			end,
 		})
 
