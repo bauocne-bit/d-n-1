@@ -1,0 +1,1 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-modded/releases/download/?.?.?/main.ua"))()
